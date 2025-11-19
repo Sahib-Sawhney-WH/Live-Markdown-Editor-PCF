@@ -18,12 +18,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/markdown-editor-pcf.git"
+    "url": "git+https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/markdown-editor-pcf/issues"
+    "url": "https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/issues"
   },
-  "homepage": "https://github.com/yourusername/markdown-editor-pcf#readme",
+  "homepage": "https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF#readme",
   "scripts": {
     "build": "pcf-scripts build",
     "clean": "pcf-scripts clean",

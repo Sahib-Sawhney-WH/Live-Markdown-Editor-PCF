@@ -200,7 +200,7 @@ The control automatically:
 3. Bind the control to the text field
 4. That's it! The control handles all the data synchronization
 
-For detailed setup instructions, see [DATAVERSE_INTEGRATION.md](DATAVERSE_INTEGRATION.md)
+For detailed setup instructions, see [DATAVERSE_INTEGRATION.md](docs/DATAVERSE_INTEGRATION.md)
 
 ## Technical Details
 
@@ -295,7 +295,7 @@ MIT License - see LICENSE file for details
 For issues, questions, or contributions:
 - Open an issue on GitHub
 - Check existing issues for solutions
-- Review the CLAUDE.md file for development history
+- Review the [documentation](docs/) for detailed guides
 
 ---
 
