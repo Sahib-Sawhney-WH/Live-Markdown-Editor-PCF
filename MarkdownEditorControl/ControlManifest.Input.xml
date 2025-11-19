@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="ModernMarkdownEditor" constructor="MarkdownEditorControl" version="0.0.1" display-name-key="Markdown Editor" description-key="Modern WYSIWYG Markdown editor with auto-validation and rich formatting" control-type="standard" >
+    <external-service-usage enabled="false">
+    </external-service-usage>
+
+    <!-- Primary bound property for Markdown content -->
+    <property name="value" display-name-key="Markdown Content" description-key="The Markdown text content to display and edit" of-type="Multiple" usage="bound" required="true" />
+
+    <!-- Configuration properties -->
+    <property name="maxLength" display-name-key="Max Length" description-key="Maximum character limit (default: 100000)" of-type="Whole.None" usage="input" required="false" />
+    <property name="readOnly" display-name-key="Read Only" description-key="Make editor read-only" of-type="TwoOptions" usage="input" required="false" />
+    <property name="theme" display-name-key="Theme" description-key="Editor theme: light, dark, auto, or high-contrast" of-type="SingleLine.Text" usage="input" required="false" />
+    <property name="showToolbar" display-name-key="Show Toolbar" description-key="Show or hide the formatting toolbar" of-type="TwoOptions" usage="input" required="false" />
+    <property name="enableSpellCheck" display-name-key="Enable Spell Check" description-key="Enable spell checking" of-type="TwoOptions" usage="input" required="false" />
+
+    <!-- Output properties -->
+    <property name="wordCount" display-name-key="Word Count" description-key="Current word count" of-type="Whole.None" usage="output" />
+    <property name="characterCount" display-name-key="Character Count" description-key="Current character count" of-type="Whole.None" usage="output" />
+    <property name="isValid" display-name-key="Is Valid" description-key="Whether the Markdown is valid" of-type="TwoOptions" usage="output" />
+    <!--
+      Property node's of-type attribute can be of-type-group attribute.
+      Example:
+      <type-group name="numbers">
+        <type>Whole.None</type>
+        <type>Currency</type>
+        <type>FP</type>
+        <type>Decimal</type>
+      </type-group>
+      <property name="sampleProperty" display-name-key="Property_Display_Key" description-key="Property_Desc_Key" of-type-group="numbers" usage="bound" required="true" />
+    -->
+    <resources>
+      <code path="index.ts" order="1"/>
+      <css path="css/MarkdownEditor.css" order="1" />
+    </resources>
+    <!-- UNCOMMENT TO ENABLE THE SPECIFIED API
+    <feature-usage>
+      <uses-feature name="Device.captureAudio" required="true" />
+      <uses-feature name="Device.captureImage" required="true" />
+      <uses-feature name="Device.captureVideo" required="true" />
+      <uses-feature name="Device.getBarcodeValue" required="true" />
+      <uses-feature name="Device.getCurrentPosition" required="true" />
+      <uses-feature name="Device.pickFile" required="true" />
+      <uses-feature name="Utility" required="true" />
+      <uses-feature name="WebAPI" required="true" />
+    </feature-usage>
+    -->
+  </control>
+</manifest>

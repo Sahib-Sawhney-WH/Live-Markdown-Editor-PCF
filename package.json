@@ -1,0 +1,69 @@
+{
+  "name": "markdown-editor-pcf",
+  "version": "1.0.0",
+  "description": "A powerful, feature-rich Markdown editor PCF control with GitHub Flavored Markdown support, built using React and Milkdown for Power Apps.",
+  "keywords": [
+    "powerapps",
+    "pcf",
+    "power-apps-component-framework",
+    "markdown",
+    "markdown-editor",
+    "react",
+    "milkdown",
+    "gfm",
+    "github-flavored-markdown",
+    "dataverse"
+  ],
+  "author": "RSM",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/markdown-editor-pcf.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/markdown-editor-pcf/issues"
+  },
+  "homepage": "https://github.com/yourusername/markdown-editor-pcf#readme",
+  "scripts": {
+    "build": "pcf-scripts build",
+    "clean": "pcf-scripts clean",
+    "lint": "pcf-scripts lint",
+    "lint:fix": "pcf-scripts lint fix",
+    "rebuild": "pcf-scripts rebuild",
+    "start": "pcf-scripts start",
+    "start:watch": "pcf-scripts start watch",
+    "refreshTypes": "pcf-scripts refreshTypes"
+  },
+  "dependencies": {
+    "@fluentui/react": "^8.125.1",
+    "@fluentui/react-icons": "^2.0.315",
+    "@milkdown/core": "^7.17.1",
+    "@milkdown/ctx": "^7.17.1",
+    "@milkdown/plugin-listener": "^7.17.1",
+    "@milkdown/plugin-table": "^5.3.1",
+    "@milkdown/preset-commonmark": "^7.17.1",
+    "@milkdown/prose": "^7.17.1",
+    "@milkdown/react": "^7.17.1",
+    "@milkdown/theme-nord": "^7.17.1",
+    "@types/dompurify": "^3.0.5",
+    "@types/react": "^19.2.6",
+    "@types/react-dom": "^19.2.3",
+    "dompurify": "^3.3.0",
+    "markdownlint": "^0.39.0",
+    "markdownlint-cli": "^0.45.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.1",
+    "@microsoft/eslint-plugin-power-apps": "^0.2.51",
+    "@types/node": "^18.19.86",
+    "@types/powerapps-component-framework": "^1.3.16",
+    "eslint-plugin-promise": "^7.1.0",
+    "globals": "^15.15.0",
+    "pcf-scripts": "^1",
+    "pcf-start": "^1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.31.0"
+  }
+}
