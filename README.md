@@ -1,50 +1,70 @@
 # Markdown Editor PCF Control
 
-A powerful, feature-rich Markdown editor built as a Power Apps Component Framework (PCF) control using React and Milkdown.
+A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) control using React and Milkdown.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![PCF](https://img.shields.io/badge/PCF-1.0-green.svg)
 ![React](https://img.shields.io/badge/React-19.2.0-61dafb.svg)
 ![Milkdown](https://img.shields.io/badge/Milkdown-7.17.1-ff6188.svg)
 
+![Markdown Editor Screenshot](image.png)
+
 ## Features
 
 ### Rich Markdown Support
-- **GitHub Flavored Markdown (GFM)** - Full support for tables, strikethrough, task lists, and autolinks
-- **CommonMark** - Standard markdown syntax for headings, lists, links, images, code blocks, etc.
-- **WYSIWYG Editing** - Visual feedback while editing markdown
-- **Live Preview** - See your markdown rendered in real-time
+- **GitHub Flavored Markdown (GFM)**: Full support for tables, strikethrough, task lists, and autolinks
+- **CommonMark**: Standard markdown syntax for headings, lists, links, images, code blocks, and more
+- **WYSIWYG Editing**: Visual editing without needing to know markdown syntax
+- **Live Rendering**: Content is formatted in real-time as you type
 
 ### Interactive Toolbar
-- **Headings** - H1, H2, H3 quick insert buttons
-- **Text Formatting** - Bold, Italic, Strikethrough
-- **Links & Images** - Easy insertion with prompts
-- **Lists** - Bulleted, Numbered, and Task lists
-- **Tables** - One-click 3x3 table insertion
+- **Undo/Redo**: Full history support with keyboard shortcuts
+- **Headings**: H1, H2, H3, and Paragraph formatting buttons
+- **Text Formatting**: Bold, Italic, Strikethrough
+- **Links**: Insert links with custom display text or show the URL directly
+- **Images**: Insert images via URL or paste from clipboard
+- **Lists**: Bulleted and Numbered lists
+- **Code Blocks**: Syntax highlighted code insertion
+- **Tables**: Custom row/column table creation with delete option
+- **Blockquotes**: Quote block insertion
+- **Horizontal Rules**: Section dividers
+- **Keyboard Shortcuts**: Tooltips showing shortcuts (Ctrl+B, Ctrl+I, etc.)
+
+### Advanced Features
+- **Find and Replace (Ctrl+F)**: Search with match count, navigate between matches, replace single or all occurrences
+- **Export to HTML**: Download formatted HTML document with custom filename
+- **Export to PDF**: Choose between text-based (searchable) or image-based PDF export
+- **Image Paste**: Paste images directly from clipboard (Ctrl+V), automatically converts to embedded base64
+- **Markdown Paste**: Paste markdown content and it renders immediately
+- **Markdown Templates**: 5 pre-built templates (Meeting Notes, Bug Report, README, Documentation, Changelog)
+- **Table Editing**: Insert tables with custom dimensions, delete tables
+- **Copy to Clipboard**: One-click markdown copy with visual feedback
+- **Auto-save Indicator**: Shows Saved/Saving/Unsaved status in real-time
 
 ### Editor Features
-- **Two-way Data Binding** - Seamlessly integrates with Power Apps forms
-- **Dynamic Sizing** - Automatically adjusts to container height and width
-- **Theme Support** - Light, Dark, Auto (system preference), and High Contrast modes
-- **Spell Check** - Toggle spell checking on/off
-- **Read-only Mode** - Display markdown without editing
-- **Character/Word Count** - Live statistics in status bar
-- **Max Length Validation** - Configurable character limit
-- **Scrollable Content** - Proper scrolling when content exceeds container
+- **Two-way Data Binding**: Full integration with Power Apps and Dataverse
+- **Dynamic Sizing**: Automatically adjusts to container height and width
+- **Responsive Design**: Adapts toolbar and layout for narrow widths
+- **Theme Support**: Light, Dark, Auto (system preference), and High Contrast modes
+- **Spell Check**: Configurable spell checking
+- **Read-only Mode**: Display markdown without editing capability
+- **Character/Word Count**: Live statistics in status bar
+- **Max Length Validation**: Configurable character limit with validation feedback
+- **Debounced Updates**: Optimized typing performance with batched updates
 
 ## Installation
 
 ### Prerequisites
-- Node.js (v14 or higher)
-- npm or yarn
+- Node.js (v18 or higher recommended)
+- npm
 - Power Apps CLI (`pac`)
-- Power Platform environment
+- Power Platform environment with Dataverse
 
 ### Setup
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF.git
    cd markdown_editor
    ```
 
@@ -62,7 +82,7 @@ A powerful, feature-rich Markdown editor built as a Power Apps Component Framewo
    ```bash
    npm start watch
    ```
-   Then open http://localhost:8181 in your browser.
+   Open http://localhost:8181 in your browser.
 
 ## Development
 
@@ -72,33 +92,33 @@ A powerful, feature-rich Markdown editor built as a Power Apps Component Framewo
 markdown_editor/
 ├── MarkdownEditorControl/
 │   ├── components/
-│   │   ├── MarkdownEditor.tsx      # Main Milkdown editor component
-│   │   └── SimpleMarkdownEditor.tsx # Fallback simple editor
+│   │   └── MarkdownEditor.tsx      # Main React/Milkdown editor component
 │   ├── css/
-│   │   └── MarkdownEditor.css      # Component styles
-│   ├── index.ts                     # PCF control lifecycle
-│   ├── ControlManifest.Input.xml   # Control configuration
-│   └── testMarkdown.ts              # Test content (temporary)
+│   │   └── MarkdownEditor.css      # Component styles with responsive design
+│   ├── generated/                  # Auto-generated manifest types
+│   ├── index.ts                    # PCF control lifecycle
+│   └── ControlManifest.Input.xml   # Control configuration
 ├── package.json
 ├── tsconfig.json
+├── DATAVERSE_INTEGRATION.md        # Detailed Dataverse setup guide
 └── README.md
 ```
 
 ### Key Files
 
-#### `index.ts`
-Main PCF control class implementing the component lifecycle:
-- `init()` - Initializes the control and registers for resize events
-- `updateView()` - Called when properties change or container resizes
-- `getOutputs()` - Returns current markdown value and statistics
-- `destroy()` - Cleanup when control is removed
+**index.ts** - PCF control class implementing the component lifecycle:
+- `init()`: Initializes the control and registers for resize events
+- `updateView()`: Called when properties change or container resizes
+- `getOutputs()`: Returns current markdown value and statistics
+- `destroy()`: Cleanup when control is removed
 
-#### `MarkdownEditor.tsx`
-React component wrapping Milkdown editor with:
-- Toolbar implementation
-- GFM plugin integration
-- Theme management
-- Event handling for markdown changes
+**MarkdownEditor.tsx** - React component with:
+- Milkdown editor integration with GFM support
+- Complete toolbar implementation
+- Find and Replace functionality
+- Export to HTML and PDF
+- Template insertion
+- Debounced updates for performance
 
 ### Available Scripts
 
@@ -112,8 +132,14 @@ npm start watch
 # Run ESLint
 npm run lint
 
+# Fix ESLint issues automatically
+npm run lint:fix
+
 # Clean build artifacts
 npm run clean
+
+# Rebuild from scratch
+npm run rebuild
 ```
 
 ### Configuration
@@ -122,9 +148,9 @@ The control accepts the following input parameters (defined in `ControlManifest.
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `value` | Multiple Lines of Text | "" | The markdown content |
+| `value` | Multiple Lines of Text | "" | The markdown content (bound property) |
 | `readOnly` | Two Options | false | Whether the editor is read-only |
-| `theme` | Enum | "light" | Theme: light, dark, auto, high-contrast |
+| `theme` | SingleLine.Text | "light" | Theme: light, dark, auto, high-contrast |
 | `showToolbar` | Two Options | true | Show/hide the formatting toolbar |
 | `enableSpellCheck` | Two Options | true | Enable spell checking |
 | `maxLength` | Whole.None | 100000 | Maximum character length |
@@ -134,13 +160,13 @@ Output parameters:
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `value` | Multiple Lines of Text | The current markdown content |
-| `wordCount` | Whole.None | Number of words |
-| `characterCount` | Whole.None | Number of characters |
+| `wordCount` | Whole.None | Number of words in the content |
+| `characterCount` | Whole.None | Number of characters in the content |
 | `isValid` | Two Options | Whether content is within max length |
 
 ## Usage in Power Apps
 
-### 1. Import the Control
+### 1. Deploy the Control
 
 1. Build the control: `npm run build`
 2. Create a solution in your Power Platform environment
@@ -148,16 +174,24 @@ Output parameters:
    ```bash
    pac solution add-reference --path ../markdown_editor
    ```
-4. Deploy the solution to your environment
+4. Build and import the solution to your environment
 
-### 2. Add to a Form
+### 2. Add to a Model-driven App Form
 
 1. Open your Power Apps form editor
 2. Add a new field or use an existing "Multiple Lines of Text" field
-3. Change the control to "Markdown Editor"
-4. Configure the control properties in the right panel
+3. Select the field and click "Change control"
+4. Choose "Markdown Editor" from the list
+5. Configure the control properties in the right panel
 
-### 3. Bind to Dataverse
+### 3. Add to a Canvas App
+
+1. Import the component into your Canvas app
+2. Insert the Markdown Editor control
+3. Set the `value` property to your data source field
+4. Configure additional properties as needed
+
+### 4. Bind to Dataverse
 
 The control works with any "Multiple Lines of Text" field in Dataverse:
 
@@ -165,99 +199,101 @@ The control works with any "Multiple Lines of Text" field in Dataverse:
 2. Set the column format to "Text" with sufficient max length
 3. Bind the control to this column in your form
 
-**Example Dataverse column settings:**
-- **Data type:** Text
-- **Format:** Text Area
-- **Max length:** 100000 (or your preferred limit)
+Recommended Dataverse column settings:
+- Data type: Text
+- Format: Text Area
+- Max length: 100000 (or your preferred limit)
 
-### 4. Reading/Writing Markdown
+### 5. Programmatic Access (Canvas Apps)
 
 ```javascript
-// In Power Apps Canvas App, read the markdown:
+// Read the current markdown:
 MarkdownEditor1.value
-
-// Set markdown programmatically:
-Set(MyMarkdown, MarkdownEditor1.value)
 
 // Get statistics:
 MarkdownEditor1.wordCount
 MarkdownEditor1.characterCount
+MarkdownEditor1.isValid
 ```
 
-## Dataverse Integration
-
-✅ **Complete** - The control is fully integrated with Dataverse and ready to use!
-
-The control automatically:
-- Loads markdown from the bound Dataverse text field
-- Saves changes back to Dataverse via two-way binding
-- Syncs updates when the field value changes externally
-- Handles empty values gracefully (shows empty editor)
-
-**To use with Dataverse:**
-1. Create or use a "Multiple Lines of Text" field in your table
-2. Add the control to your form
-3. Bind the control to the text field
-4. That's it! The control handles all the data synchronization
-
-For detailed setup instructions, see [DATAVERSE_INTEGRATION.md](docs/DATAVERSE_INTEGRATION.md)
+For detailed Dataverse setup instructions, see [DATAVERSE_INTEGRATION.md](DATAVERSE_INTEGRATION.md)
 
 ## Technical Details
 
 ### Technology Stack
 
-- **PCF Framework** - Power Apps Component Framework
-- **React 19.2.0** - UI library
-- **Milkdown 7.17.1** - WYSIWYG markdown editor built on ProseMirror
-- **@milkdown/preset-gfm** - GitHub Flavored Markdown support
-- **@milkdown/theme-nord** - Nord theme for styling
-- **TypeScript** - Type-safe development
-- **Webpack** - Module bundling
+- **PCF Framework**: Power Apps Component Framework
+- **React 19.2.0**: UI library with hooks
+- **Milkdown 7.17.1**: WYSIWYG markdown editor built on ProseMirror
+- **@milkdown/preset-commonmark**: CommonMark markdown support
+- **@milkdown/preset-gfm**: GitHub Flavored Markdown support
+- **@milkdown/theme-nord**: Nord theme for editor styling
+- **@milkdown/plugin-history**: Undo/redo functionality
+- **jsPDF 3.0.4**: PDF generation for text-based export
+- **html2canvas 1.4.1**: Screenshot capture for image-based PDF export
+- **TypeScript 5.8**: Type-safe development
+- **Webpack**: Module bundling (via pcf-scripts)
 
 ### Bundle Size
 
-- **Production bundle:** 2.64 MiB
-- Includes React, Milkdown, GFM plugins, and all dependencies
-- Optimized for production deployment
+- Production bundle: ~4.5 MiB
+- Includes React, Milkdown, all plugins, jsPDF, html2canvas, and dependencies
 
 ### Browser Support
 
 - Microsoft Edge (Chromium)
 - Google Chrome
 - Firefox
-- Safari (limited testing)
+- Safari
+
+### Performance Optimizations
+
+- Debounced parent updates (150ms) to reduce re-renders during typing
+- Debounced statistics updates (250ms) for smooth word/character counts
+- Immediate internal state updates for responsive feel
+- React 19 with concurrent features
 
 ## Troubleshooting
 
 ### Build Errors
 
-**TypeScript compilation errors:**
+TypeScript compilation errors:
 ```bash
 # Clear caches and rebuild
 rm -rf .pcf node_modules/.cache
-npm run build
+npm run rebuild
 ```
 
-**Import errors with Milkdown:**
-- Ensure using `@milkdown/kit` paths for v7
-- Example: `import { gfm } from '@milkdown/kit/preset/gfm'`
+ESLint errors:
+```bash
+# Auto-fix ESLint issues
+npm run lint:fix
+```
 
 ### Runtime Issues
 
 **Editor not rendering:**
-- Check browser console for errors
+- Check browser console for JavaScript errors
 - Verify React 19 is properly bundled
-- Ensure `createRoot` API is used (not legacy `render`)
+- Ensure the control is bound to a text field
 
 **Height not adjusting:**
 - Verify `trackContainerResize(true)` is called in `init()`
-- Check that `allocatedHeight` is being read from context
-- Ensure CSS doesn't have hardcoded height values
+- Check that the form/container has a defined height
+- Ensure CSS doesn't have conflicting height values
 
 **Toolbar buttons not working:**
 - Check Milkdown editor initialization completed
-- Verify `get()` calls succeed without throwing
-- Ensure markdown schema includes the requested node types
+- Verify the editor has focus
+- Check browser console for errors
+
+**Slow typing performance:**
+- This is optimized with debouncing; if still slow, check for other controls on the form
+- Consider reducing maxLength if working with very large documents
+
+**Links not rendering immediately:**
+- Links now use proper ProseMirror marks and should render instantly
+- If using older version, rebuild the control
 
 ## Contributing
 
@@ -267,16 +303,21 @@ npm run build
 - Use meaningful variable names
 - Add comments for complex logic
 - Keep functions focused and small
+- Use ESLint and fix all warnings
 
 ### Testing Checklist
 
 Before submitting changes:
-- [ ] Build succeeds without errors
+- [ ] Build succeeds without errors (`npm run build`)
+- [ ] ESLint passes (`npm run lint`)
 - [ ] Control loads in test harness
-- [ ] All toolbar buttons work
-- [ ] Height/width sliders work
+- [ ] All toolbar buttons work correctly
+- [ ] Height/width sliders work in test harness
 - [ ] Markdown renders correctly
-- [ ] Two-way binding works
+- [ ] Two-way binding works with Dataverse
+- [ ] Find and Replace works
+- [ ] Export to HTML works
+- [ ] Export to PDF works (both text and image modes)
 - [ ] No console errors
 
 ## License
@@ -285,20 +326,20 @@ MIT License - see LICENSE file for details
 
 ## Acknowledgments
 
-- [Milkdown](https://milkdown.dev/) - Excellent markdown editor framework
+- [Milkdown](https://milkdown.dev/) - Plugin-driven markdown editor framework
 - [ProseMirror](https://prosemirror.net/) - Underlying editor engine
 - [React](https://react.dev/) - UI framework
+- [jsPDF](https://github.com/parallax/jsPDF) - PDF generation
 - [Power Apps](https://powerapps.microsoft.com/) - Platform
 
 ## Support
 
 For issues, questions, or contributions:
-- Open an issue on GitHub
+- Open an issue on [GitHub](https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/issues)
 - Check existing issues for solutions
-- Review the [documentation](docs/) for detailed guides
+- Review the documentation for detailed guides
 
 ---
 
-**Version:** 1.0.0
-**Last Updated:** January 18, 2025
-**Status:** ✅ Production Ready - Fully integrated with Dataverse
+Version: 1.3.0
+Last Updated: November 2025

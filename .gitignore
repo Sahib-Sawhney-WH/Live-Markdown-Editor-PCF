@@ -54,4 +54,13 @@ desktop.ini
 Solutions/
 
 # Development notes (project-specific, not for public repo)
+CLAUDE.md
 ../CLAUDE.md
+.claude/
+
+# Test files and exports
+*.pdf
+*.html
+test*.png
+*Greenshot*.png
+*Example*.png

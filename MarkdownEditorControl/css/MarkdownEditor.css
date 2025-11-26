@@ -71,6 +71,16 @@
     background-color: #4a4a4a;
 }
 
+/* Copy success state */
+.toolbar-button.copy-success {
+    background-color: #107c10;
+    color: #ffffff;
+}
+
+.toolbar-button.copy-success:hover {
+    background-color: #0e6b0e;
+}
+
 .toolbar-divider {
     width: 1px;
     height: 24px;
@@ -105,11 +115,12 @@
     max-height: 100%;
 }
 
-/* Milkdown theme customization */
+/* Milkdown theme customization - override Nord theme centering */
 .milkdown {
     position: relative;
-    margin: 0 auto;
-    width: 100%;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
     box-sizing: border-box;
 }
 
@@ -117,6 +128,14 @@
     outline: none;
     line-height: 1.6;
     font-size: 16px;
+    text-align: left;
+}
+
+/* Override any ProseMirror centering from themes */
+.ProseMirror {
+    margin: 0 !important;
+    max-width: 100% !important;
+    text-align: left !important;
 }
 
 .milkdown h1 {
@@ -254,6 +273,36 @@
     gap: 8px;
 }
 
+/* Save status indicator */
+.save-status {
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.save-status-saved {
+    color: #107c10;
+}
+
+.save-status-saving {
+    color: #0078d4;
+}
+
+.save-status-unsaved {
+    color: #d83b01;
+}
+
+.dark .save-status-saved {
+    color: #6ccb5f;
+}
+
+.dark .save-status-saving {
+    color: #6cb8f6;
+}
+
+.dark .save-status-unsaved {
+    color: #f7a36c;
+}
+
 /* Read-only mode */
 .markdown-editor-container.read-only .markdown-toolbar {
     display: none;
@@ -297,5 +346,405 @@
 .milkdown .editor:focus {
     outline: 2px solid #0078d4;
     outline-offset: 4px;
+}
+
+/* Active toolbar button */
+.toolbar-button.active {
+    background-color: #0078d4;
+    color: #ffffff;
+}
+
+.toolbar-button.active:hover {
+    background-color: #106ebe;
+}
+
+/* Dropdown container */
+.toolbar-dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.toolbar-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 160px;
+    background-color: #ffffff;
+    border: 1px solid #d1d1d1;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    margin-top: 4px;
+}
+
+.toolbar-dropdown.dark {
+    background-color: #2d2d2d;
+    border-color: #4a4a4a;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    color: #323130;
+    transition: background-color 0.15s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f5f5;
+}
+
+.dark .dropdown-item {
+    color: #e0e0e0;
+}
+
+.dark .dropdown-item:hover {
+    background-color: #3c3c3c;
+}
+
+.dropdown-item:first-child {
+    border-radius: 4px 4px 0 0;
+}
+
+.dropdown-item:last-child {
+    border-radius: 0 0 4px 4px;
+}
+
+/* Find & Replace Panel */
+.find-replace-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #d1d1d1;
+    position: relative;
+}
+
+.find-replace-panel.dark {
+    background-color: #2d2d2d;
+    border-bottom-color: #4a4a4a;
+}
+
+.find-replace-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.find-input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #d1d1d1;
+    border-radius: 3px;
+    font-size: 13px;
+    background-color: #ffffff;
+    color: #323130;
+}
+
+.find-input:focus {
+    outline: none;
+    border-color: #0078d4;
+    box-shadow: 0 0 0 1px #0078d4;
+}
+
+.dark .find-input {
+    background-color: #1e1e1e;
+    border-color: #4a4a4a;
+    color: #e0e0e0;
+}
+
+.dark .find-input:focus {
+    border-color: #0078d4;
+}
+
+.find-results {
+    font-size: 12px;
+    color: #605e5c;
+    min-width: 80px;
+    text-align: right;
+}
+
+.dark .find-results {
+    color: #b4b4b4;
+}
+
+.find-button {
+    padding: 6px 12px;
+    background-color: #0078d4;
+    color: #ffffff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.15s ease;
+}
+
+.find-button:hover:not(:disabled) {
+    background-color: #106ebe;
+}
+
+.find-button:disabled {
+    background-color: #c8c8c8;
+    cursor: not-allowed;
+}
+
+.dark .find-button:disabled {
+    background-color: #4a4a4a;
+}
+
+/* Find navigation buttons */
+.find-nav-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background-color: #f0f0f0;
+    border: 1px solid #d1d1d1;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    color: #323130;
+    transition: all 0.15s ease;
+}
+
+.find-nav-button:hover:not(:disabled) {
+    background-color: #e1e1e1;
+    border-color: #c1c1c1;
+}
+
+.find-nav-button:active:not(:disabled) {
+    background-color: #d1d1d1;
+}
+
+.find-nav-button:disabled {
+    background-color: #f5f5f5;
+    color: #a0a0a0;
+    cursor: not-allowed;
+}
+
+.dark .find-nav-button {
+    background-color: #3c3c3c;
+    border-color: #4a4a4a;
+    color: #e0e0e0;
+}
+
+.dark .find-nav-button:hover:not(:disabled) {
+    background-color: #4a4a4a;
+    border-color: #5a5a5a;
+}
+
+.dark .find-nav-button:disabled {
+    background-color: #2d2d2d;
+    color: #606060;
+}
+
+.find-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #605e5c;
+    line-height: 1;
+    border-radius: 3px;
+}
+
+.find-close:hover {
+    background-color: #e1e1e1;
+}
+
+.dark .find-close {
+    color: #b4b4b4;
+}
+
+.dark .find-close:hover {
+    background-color: #3c3c3c;
     border-radius: 2px;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+
+/* Compact toolbar for narrow widths */
+.markdown-editor-container.compact .markdown-toolbar {
+    padding: 4px;
+    gap: 2px;
+}
+
+.markdown-editor-container.compact .toolbar-button {
+    padding: 4px 6px;
+    min-width: 28px;
+    height: 28px;
+    font-size: 12px;
+}
+
+.markdown-editor-container.compact .toolbar-divider {
+    height: 20px;
+    margin: 0 2px;
+}
+
+.markdown-editor-container.compact .markdown-editor-wrapper {
+    padding: 8px;
+}
+
+.markdown-editor-container.compact .markdown-status-bar {
+    padding: 2px 8px;
+    font-size: 11px;
+}
+
+.markdown-editor-container.compact .milkdown .editor {
+    font-size: 14px;
+}
+
+/* Very compact mode for very narrow widths */
+.markdown-editor-container.very-compact .markdown-toolbar {
+    padding: 2px;
+    gap: 1px;
+}
+
+.markdown-editor-container.very-compact .toolbar-button {
+    padding: 2px 4px;
+    min-width: 24px;
+    height: 24px;
+    font-size: 11px;
+}
+
+.markdown-editor-container.very-compact .toolbar-divider {
+    display: none;
+}
+
+.markdown-editor-container.very-compact .markdown-editor-wrapper {
+    padding: 4px;
+}
+
+.markdown-editor-container.very-compact .markdown-status-bar {
+    padding: 2px 4px;
+    font-size: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.markdown-editor-container.very-compact .status-item {
+    gap: 4px;
+}
+
+/* Hide less important buttons on very compact */
+.markdown-editor-container.very-compact .toolbar-button[title*="Blockquote"],
+.markdown-editor-container.very-compact .toolbar-button[title*="Horizontal"],
+.markdown-editor-container.very-compact .toolbar-button[title*="Strikethrough"] {
+    display: none;
+}
+
+/* Responsive Find & Replace */
+.markdown-editor-container.compact .find-replace-panel {
+    padding: 8px;
+    gap: 6px;
+}
+
+.markdown-editor-container.compact .find-input {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.markdown-editor-container.compact .find-button {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.markdown-editor-container.compact .find-nav-button {
+    width: 24px;
+    height: 24px;
+}
+
+.markdown-editor-container.very-compact .find-replace-panel {
+    padding: 6px;
+}
+
+.markdown-editor-container.very-compact .find-replace-row {
+    flex-wrap: wrap;
+}
+
+.markdown-editor-container.very-compact .find-results {
+    min-width: auto;
+    width: 100%;
+    text-align: center;
+    order: 10;
+    margin-top: 4px;
+}
+
+/* Smooth transitions for resize */
+.markdown-editor-container,
+.markdown-toolbar,
+.toolbar-button,
+.markdown-editor-wrapper,
+.markdown-status-bar {
+    transition: padding 0.15s ease, font-size 0.15s ease, gap 0.15s ease;
+}
+
+/* Better table responsiveness */
+.milkdown table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Image responsiveness */
+.milkdown img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Code block responsiveness */
+.milkdown pre {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Mobile-friendly touch targets */
+@media (pointer: coarse) {
+    .toolbar-button {
+        min-width: 40px;
+        height: 40px;
+    }
+
+    .find-nav-button {
+        width: 36px;
+        height: 36px;
+    }
+
+    .find-button {
+        padding: 8px 16px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .markdown-toolbar,
+    .markdown-status-bar,
+    .find-replace-panel {
+        display: none !important;
+    }
+
+    .markdown-editor-container {
+        border: none !important;
+    }
+
+    .markdown-editor-wrapper {
+        padding: 0 !important;
+        overflow: visible !important;
+    }
 }
