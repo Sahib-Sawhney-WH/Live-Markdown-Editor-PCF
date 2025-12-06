@@ -7,8 +7,6 @@ A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) c
 ![React](https://img.shields.io/badge/React-19.2.0-61dafb.svg)
 ![Milkdown](https://img.shields.io/badge/Milkdown-7.17.1-ff6188.svg)
 
-![Markdown Editor Screenshot](image.png)
-
 ## Features
 
 ### Rich Markdown Support
@@ -25,7 +23,7 @@ A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) c
 - **Images**: Insert images via URL or paste from clipboard
 - **Lists**: Bulleted and Numbered lists
 - **Code Blocks**: Syntax highlighted code insertion
-- **Tables**: Custom row/column table creation with delete option
+- **Tables**: Visual grid picker for table creation (2-6 rows/columns), with add/delete row/column options
 - **Blockquotes**: Quote block insertion
 - **Horizontal Rules**: Section dividers
 - **Keyboard Shortcuts**: Tooltips showing shortcuts (Ctrl+B, Ctrl+I, etc.)
@@ -36,8 +34,13 @@ A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) c
 - **Export to PDF**: Choose between text-based (searchable) or image-based PDF export
 - **Image Paste**: Paste images directly from clipboard (Ctrl+V), automatically converts to embedded base64
 - **Markdown Paste**: Paste markdown content and it renders immediately
-- **Markdown Templates**: 5 pre-built templates (Meeting Notes, Bug Report, README, Documentation, Changelog)
-- **Table Editing**: Insert tables with custom dimensions, delete tables
+- **Markdown Templates**: 20+ pre-built templates organized by category:
+  - Meetings: Meeting Notes, Weekly Status, 1:1 Meeting
+  - Development: Bug Report, Code Review, Feature Request, Technical Spec
+  - Project: README, API Documentation, User Guide
+  - Process: Changelog, Release Notes, Decision Record
+  - Quick: Simple Note, Checklist, Comparison Table
+- **Table Editing**: Visual grid picker for insertion, add/delete rows and columns, delete entire table
 - **Copy to Clipboard**: One-click markdown copy with visual feedback
 - **Auto-save Indicator**: Shows Saved/Saving/Unsaved status in real-time
 
@@ -341,5 +344,5 @@ For issues, questions, or contributions:
 
 ---
 
-Version: 1.3.0
-Last Updated: November 2025
+Version: 1.4.0
+Last Updated: December 2025

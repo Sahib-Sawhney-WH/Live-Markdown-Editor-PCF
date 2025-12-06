@@ -5,6 +5,39 @@ All notable changes to the Markdown Editor PCF Control will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-12-05
+
+### Added
+- **Expanded Templates**: 20+ professional templates organized by category:
+  - Meetings: Meeting Notes, Weekly Status Report, 1:1 Meeting
+  - Development: Bug Report, Code Review Checklist, Feature Request, Technical Spec
+  - Project: README, API Documentation, User Guide
+  - Process: Changelog, Release Notes, Decision Record
+  - Quick: Simple Note, Checklist, Comparison Table
+- **Visual Table Picker**: Interactive 6×6 grid for selecting table dimensions
+- **Table Row/Column Management**: Add Row Below, Add Column Right, Delete Row, Delete Column
+- **Minimum Table Rows**: Tables enforce minimum 2 rows (header + data)
+- **Category-grouped Templates**: Templates dropdown now shows organized categories with headers
+
+### Changed
+- Table dropdown now includes all table operations in one menu
+- Templates dropdown scrollable with max-height for better UX
+- Improved table cell creation with proper paragraph content structure
+
+### Fixed
+- Find & Replace navigation now correctly cycles through all matches
+- Search highlights persist on all matches (not just current)
+- Replace All no longer breaks markdown rendering
+- Scroll for find matches stays within editor container
+- Highlights clear when closing find panel via X button
+
+### Technical
+- Added ProseMirror Node type imports for type safety
+- Improved table manipulation using proper schema node types
+- Added CSS styles for table picker grid and category headers
+
+---
+
 ## [1.3.0] - 2025-11-26
 
 ### Added
@@ -117,6 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.4.0 | 2025-12-05 | 20+ templates, visual table picker, table row/column management, Find & Replace fixes |
 | 1.3.0 | 2025-11-26 | Performance optimizations, improved link insertion, HTML export fixes |
 | 1.2.0 | 2025-01-20 | PDF export, image paste, responsive design |
 | 1.1.0 | 2025-01-19 | Find & Replace, templates, table editing |
@@ -124,6 +158,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.4.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.0
 [1.3.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.3.0
 [1.2.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.2.0
 [1.1.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.1.0

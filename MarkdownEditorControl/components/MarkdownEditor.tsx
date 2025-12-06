@@ -24,6 +24,12 @@ import '@milkdown/theme-nord/style.css';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { TextSelection } from '@milkdown/prose/state';
+import { Decoration, DecorationSet } from '@milkdown/prose/view';
+import { Node as ProseMirrorNode } from '@milkdown/prose/model';
+
+// Module-level regex constants (compiled once)
+const ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
+const WORD_MATCH_REGEX = /\S+/g;
 
 export interface MarkdownEditorProps {
     value: string;
@@ -39,14 +45,25 @@ export interface MarkdownEditorProps {
 
 type SaveStatus = 'saved' | 'saving' | 'unsaved';
 
-// Markdown templates
-const MARKDOWN_TEMPLATES: { name: string; content: string }[] = [
+// Markdown templates - organized by category
+const MARKDOWN_TEMPLATES: { name: string; category: string; content: string }[] = [
+    // Meeting & Collaboration
     {
         name: 'Meeting Notes',
+        category: 'Meetings',
         content: `# Meeting Notes
 
 **Date:** ${new Date().toLocaleDateString()}
-**Attendees:**
+**Time:**
+**Location/Call Link:**
+**Facilitator:**
+**Note Taker:**
+
+## Attendees
+| Name | Role | Present |
+|------|------|:-------:|
+|  |  | ☐ |
+|  |  | ☐ |
 
 ## Agenda
 1.
@@ -55,142 +72,877 @@ const MARKDOWN_TEMPLATES: { name: string; content: string }[] = [
 
 ## Discussion Points
 
+### Topic 1
+**Discussion:**
+
+**Decision:**
+
+### Topic 2
+**Discussion:**
+
+**Decision:**
 
 ## Action Items
-- [ ]
-- [ ]
-- [ ]
+| Task | Owner | Due Date | Status |
+|------|-------|----------|--------|
+|  |  |  | ☐ Pending |
+|  |  |  | ☐ Pending |
 
-## Next Steps
+## Next Meeting
+**Date:**
+**Topics to Cover:**
+-
 
 `
     },
     {
-        name: 'Bug Report',
-        content: `# Bug Report
+        name: 'Weekly Status Report',
+        category: 'Meetings',
+        content: `# Weekly Status Report
+
+**Week of:** ${new Date().toLocaleDateString()}
+**Team/Project:**
+**Prepared by:**
 
 ## Summary
-Brief description of the bug.
+Brief overview of the week's progress.
+
+## Accomplishments
+- ✅
+- ✅
+- ✅
+
+## In Progress
+| Task | Progress | ETA | Blockers |
+|------|----------|-----|----------|
+|  | 0% |  | None |
+|  | 0% |  | None |
+
+## Upcoming (Next Week)
+- [ ]
+- [ ]
+- [ ]
+
+## Risks & Blockers
+| Risk/Blocker | Impact | Mitigation |
+|--------------|--------|------------|
+|  | High/Med/Low |  |
+
+## Metrics
+| Metric | Target | Actual | Status |
+|--------|--------|--------|--------|
+|  |  |  | 🟢/🟡/🔴 |
+
+## Notes & Comments
+
+`
+    },
+    {
+        name: '1:1 Meeting',
+        category: 'Meetings',
+        content: `# 1:1 Meeting Notes
+
+**Date:** ${new Date().toLocaleDateString()}
+**Participants:**
+
+---
+
+## Check-in
+*How are things going?*
+
+
+## Updates Since Last Meeting
+-
+-
+
+## Discussion Topics
+
+### Topic 1
+
+
+### Topic 2
+
+
+## Feedback
+**What's going well:**
+
+
+**Areas for improvement:**
+
+
+## Action Items
+- [ ]
+- [ ]
+
+## Goals for Next Period
+1.
+2.
+
+## Next Meeting
+**Date:**
+**Topics to prep:**
+
+`
+    },
+    // Development & Technical
+    {
+        name: 'Bug Report',
+        category: 'Development',
+        content: `# Bug Report
+
+**ID:** BUG-
+**Reported by:**
+**Date:** ${new Date().toLocaleDateString()}
+**Priority:** 🔴 Critical / 🟠 High / 🟡 Medium / 🟢 Low
+**Status:** Open / In Progress / Resolved / Closed
+
+## Summary
+Brief, clear description of the bug.
 
 ## Environment
-- **Browser:**
-- **OS:**
-- **Version:**
+| Property | Value |
+|----------|-------|
+| Application Version |  |
+| Browser/Client |  |
+| Operating System |  |
+| Device |  |
+| User Role/Permissions |  |
 
 ## Steps to Reproduce
 1.
 2.
 3.
+4.
 
 ## Expected Behavior
-
+What should happen.
 
 ## Actual Behavior
+What actually happens.
 
+## Error Messages
+\`\`\`
+Paste any error messages here
+\`\`\`
 
-## Screenshots
-(if applicable)
+## Screenshots/Videos
+<!-- Attach or link to visual evidence -->
+
+## Logs
+<details>
+<summary>Click to expand logs</summary>
+
+\`\`\`
+Paste relevant logs here
+\`\`\`
+
+</details>
+
+## Workaround
+Is there a temporary workaround? Describe it here.
 
 ## Additional Context
+Any other relevant information.
+
+## Root Cause (for developers)
+
+
+## Fix Applied
+
 
 `
     },
     {
+        name: 'Feature Request',
+        category: 'Development',
+        content: `# Feature Request
+
+**Title:**
+**Requested by:**
+**Date:** ${new Date().toLocaleDateString()}
+**Priority:** High / Medium / Low
+
+## Problem Statement
+*What problem does this feature solve?*
+
+
+## Proposed Solution
+*Describe the desired feature*
+
+
+## User Stories
+As a [type of user], I want [goal] so that [benefit].
+
+## Acceptance Criteria
+- [ ]
+- [ ]
+- [ ]
+
+## Mockups / Wireframes
+<!-- Attach or describe the UI -->
+
+## Technical Considerations
+*Any technical constraints or considerations*
+
+
+## Dependencies
+*What does this depend on?*
+-
+
+## Alternatives Considered
+| Alternative | Pros | Cons |
+|-------------|------|------|
+|  |  |  |
+
+## Estimated Effort
+- **T-Shirt Size:** XS / S / M / L / XL
+- **Story Points:**
+
+## Business Value
+*Why is this important?*
+
+
+`
+    },
+    {
+        name: 'Technical Specification',
+        category: 'Development',
+        content: `# Technical Specification
+
+**Document Title:**
+**Author:**
+**Date:** ${new Date().toLocaleDateString()}
+**Version:** 1.0
+**Status:** Draft / In Review / Approved
+
+## Overview
+Brief description of what this specification covers.
+
+## Goals
+-
+-
+
+## Non-Goals
+-
+-
+
+## Background
+Context and motivation for this work.
+
+## Architecture
+
+### System Diagram
+\`\`\`
+[Component A] --> [Component B] --> [Component C]
+\`\`\`
+
+### Components
+| Component | Responsibility | Technology |
+|-----------|----------------|------------|
+|  |  |  |
+
+## Data Model
+
+### Entities
+\`\`\`
+Entity Name {
+  id: string
+  field1: type
+  field2: type
+}
+\`\`\`
+
+### Database Schema
+| Table | Column | Type | Constraints |
+|-------|--------|------|-------------|
+|  |  |  |  |
+
+## API Design
+
+### Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /api/resource | Description |
+| POST | /api/resource | Description |
+
+### Request/Response Examples
+\`\`\`json
+{
+  "example": "payload"
+}
+\`\`\`
+
+## Security Considerations
+-
+
+## Performance Considerations
+-
+
+## Testing Strategy
+- Unit Tests:
+- Integration Tests:
+- E2E Tests:
+
+## Rollout Plan
+1.
+2.
+3.
+
+## Monitoring & Alerts
+-
+
+## Open Questions
+- [ ]
+
+## References
+-
+
+`
+    },
+    {
+        name: 'Code Review',
+        category: 'Development',
+        content: `# Code Review
+
+**PR/MR:** #
+**Author:**
+**Reviewer:**
+**Date:** ${new Date().toLocaleDateString()}
+
+## Summary of Changes
+Brief description of what this PR does.
+
+## Review Checklist
+### Code Quality
+- [ ] Code follows project style guidelines
+- [ ] No unnecessary complexity
+- [ ] Functions/methods are appropriately sized
+- [ ] Variable and function names are clear
+
+### Functionality
+- [ ] Code does what it's supposed to do
+- [ ] Edge cases are handled
+- [ ] Error handling is appropriate
+
+### Testing
+- [ ] Unit tests added/updated
+- [ ] Tests pass locally
+- [ ] Test coverage is adequate
+
+### Security
+- [ ] No sensitive data exposed
+- [ ] Input validation present
+- [ ] No SQL injection/XSS vulnerabilities
+
+### Documentation
+- [ ] Code comments where needed
+- [ ] README updated if needed
+- [ ] API docs updated if needed
+
+## Feedback
+
+### Must Fix 🔴
+| Location | Issue | Suggestion |
+|----------|-------|------------|
+|  |  |  |
+
+### Should Fix 🟡
+| Location | Issue | Suggestion |
+|----------|-------|------------|
+|  |  |  |
+
+### Nice to Have 🟢
+| Location | Suggestion |
+|----------|------------|
+|  |  |
+
+### Praise 👏
+-
+
+## Questions
+-
+
+## Overall Assessment
+- [ ] Approved
+- [ ] Approved with minor changes
+- [ ] Request changes
+
+`
+    },
+    {
+        name: 'Release Notes',
+        category: 'Development',
+        content: `# Release Notes
+
+**Version:** v
+**Release Date:** ${new Date().toLocaleDateString()}
+**Release Type:** Major / Minor / Patch / Hotfix
+
+## Highlights
+Key features and improvements in this release.
+
+## New Features ✨
+- **Feature Name:** Description
+- **Feature Name:** Description
+
+## Improvements 📈
+- Improved X for better Y
+- Enhanced performance of Z
+
+## Bug Fixes 🐛
+- Fixed issue where... (#123)
+- Resolved bug that caused... (#456)
+
+## Breaking Changes ⚠️
+- **Change:** Description of breaking change
+  - **Migration:** How to update
+
+## Deprecations 📋
+- \`oldMethod()\` is deprecated, use \`newMethod()\` instead
+
+## Known Issues
+- Issue description (tracking in #789)
+
+## Dependencies Updated
+| Package | Old Version | New Version |
+|---------|-------------|-------------|
+|  |  |  |
+
+## Upgrade Instructions
+1.
+2.
+3.
+
+## Contributors
+Thanks to everyone who contributed to this release!
+- @contributor1
+- @contributor2
+
+`
+    },
+    // Project Management
+    {
         name: 'Project README',
+        category: 'Project',
         content: `# Project Name
 
-Brief description of the project.
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+Brief description of what this project does and why it exists.
+
+## Table of Contents
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [API Reference](#api-reference)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Features
-- Feature 1
-- Feature 2
-- Feature 3
+- ✅ Feature 1 - Description
+- ✅ Feature 2 - Description
+- ✅ Feature 3 - Description
+
+## Prerequisites
+- Node.js >= 16.0
+- npm >= 8.0
+- Other requirement
 
 ## Installation
 
 \`\`\`bash
+# Clone the repository
+git clone https://github.com/username/project.git
+
+# Navigate to project directory
+cd project
+
+# Install dependencies
 npm install
+
+# Set up environment variables
+cp .env.example .env
 \`\`\`
 
 ## Usage
 
+\`\`\`bash
+# Development
+npm run dev
+
+# Production build
+npm run build
+
+# Run tests
+npm test
+\`\`\`
+
+### Basic Example
 \`\`\`javascript
-// Example code
+import { Example } from 'project';
+
+const result = Example.doSomething();
 \`\`\`
 
 ## Configuration
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| \`API_KEY\` | Your API key | - | Yes |
+| \`DEBUG\` | Enable debug mode | \`false\` | No |
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| option1 | Description | value |
+## API Reference
+See [API Documentation](./docs/api.md) for detailed reference.
+
+## Project Structure
+\`\`\`
+project/
+├── src/
+│   ├── components/
+│   ├── utils/
+│   └── index.ts
+├── tests/
+├── docs/
+└── package.json
+\`\`\`
 
 ## Contributing
-
 1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
+2. Create your feature branch (\`git checkout -b feature/amazing\`)
+3. Commit your changes (\`git commit -m 'Add amazing feature'\`)
+4. Push to the branch (\`git push origin feature/amazing\`)
+5. Open a Pull Request
 
 ## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-MIT
+## Acknowledgments
+- Thanks to X for Y
+- Inspired by Z
+
 `
     },
     {
-        name: 'Documentation',
-        content: `# Documentation Title
+        name: 'Project Proposal',
+        category: 'Project',
+        content: `# Project Proposal
 
-## Overview
-Provide an overview of the topic.
+**Project Name:**
+**Proposed by:**
+**Date:** ${new Date().toLocaleDateString()}
+**Version:** 1.0
+
+---
+
+## Executive Summary
+Brief overview of the project (2-3 sentences).
+
+## Problem Statement
+What problem are we solving?
+
+## Objectives
+1.
+2.
+3.
+
+## Scope
+
+### In Scope
+-
+-
+
+### Out of Scope
+-
+-
+
+## Proposed Solution
+Describe the solution approach.
+
+## Success Criteria
+| Criterion | Target | Measurement |
+|-----------|--------|-------------|
+|  |  |  |
+
+## Timeline
+| Phase | Description | Duration | Start | End |
+|-------|-------------|----------|-------|-----|
+| Phase 1 |  |  |  |  |
+| Phase 2 |  |  |  |  |
+
+## Resource Requirements
+### Team
+| Role | Name | Allocation |
+|------|------|------------|
+|  |  | % |
+
+### Budget
+| Item | Cost |
+|------|------|
+|  | $ |
+| **Total** | **$** |
+
+## Risks
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+|  | High/Med/Low | High/Med/Low |  |
+
+## Stakeholders
+| Name | Role | Interest |
+|------|------|----------|
+|  |  |  |
+
+## Approval
+| Role | Name | Signature | Date |
+|------|------|-----------|------|
+| Sponsor |  |  |  |
+| Lead |  |  |  |
+
+`
+    },
+    {
+        name: 'Decision Log',
+        category: 'Project',
+        content: `# Decision Log
+
+**Project:**
+**Last Updated:** ${new Date().toLocaleDateString()}
+
+---
+
+## Decision Record Template
+
+### DEC-001: [Decision Title]
+**Date:** ${new Date().toLocaleDateString()}
+**Status:** Proposed / Accepted / Deprecated / Superseded
+**Deciders:**
+
+#### Context
+What is the issue or situation that requires a decision?
+
+#### Decision
+What is the decision that was made?
+
+#### Options Considered
+| Option | Pros | Cons |
+|--------|------|------|
+| Option A |  |  |
+| Option B |  |  |
+| Option C |  |  |
+
+#### Rationale
+Why was this decision made?
+
+#### Consequences
+What are the results of this decision?
+- Positive:
+- Negative:
+- Neutral:
+
+#### Related Decisions
+- DEC-XXX
+
+---
+
+## Decision Index
+| ID | Decision | Date | Status |
+|----|----------|------|--------|
+| DEC-001 |  |  | Accepted |
+
+`
+    },
+    // Documentation
+    {
+        name: 'API Documentation',
+        category: 'Documentation',
+        content: `# API Documentation
+
+**Base URL:** \`https://api.example.com/v1\`
+**Version:** 1.0
+**Last Updated:** ${new Date().toLocaleDateString()}
+
+## Authentication
+All API requests require authentication using an API key.
+
+\`\`\`
+Authorization: Bearer YOUR_API_KEY
+\`\`\`
+
+## Rate Limiting
+| Plan | Requests/min | Requests/day |
+|------|--------------|--------------|
+| Free | 60 | 1,000 |
+| Pro | 300 | 10,000 |
+
+## Endpoints
+
+### Resource Name
+
+#### Get All Resources
+\`\`\`http
+GET /resources
+\`\`\`
+
+**Query Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| page | integer | No | Page number (default: 1) |
+| limit | integer | No | Items per page (default: 20) |
+
+**Response:**
+\`\`\`json
+{
+  "data": [],
+  "meta": {
+    "total": 100,
+    "page": 1,
+    "limit": 20
+  }
+}
+\`\`\`
+
+#### Get Single Resource
+\`\`\`http
+GET /resources/:id
+\`\`\`
+
+#### Create Resource
+\`\`\`http
+POST /resources
+\`\`\`
+
+**Request Body:**
+\`\`\`json
+{
+  "name": "string",
+  "description": "string"
+}
+\`\`\`
+
+#### Update Resource
+\`\`\`http
+PUT /resources/:id
+\`\`\`
+
+#### Delete Resource
+\`\`\`http
+DELETE /resources/:id
+\`\`\`
+
+## Error Codes
+| Code | Description |
+|------|-------------|
+| 400 | Bad Request |
+| 401 | Unauthorized |
+| 403 | Forbidden |
+| 404 | Not Found |
+| 429 | Rate Limit Exceeded |
+| 500 | Internal Server Error |
+
+## SDKs & Libraries
+- JavaScript: \`npm install example-sdk\`
+- Python: \`pip install example-sdk\`
+
+`
+    },
+    {
+        name: 'User Guide',
+        category: 'Documentation',
+        content: `# User Guide
+
+**Product:**
+**Version:**
+**Last Updated:** ${new Date().toLocaleDateString()}
+
+---
 
 ## Getting Started
 
-### Prerequisites
+### System Requirements
 - Requirement 1
 - Requirement 2
 
 ### Installation
 Step-by-step installation instructions.
 
-## API Reference
+### First-Time Setup
+1.
+2.
+3.
 
-### Method Name
-\`\`\`
-methodName(param1, param2)
-\`\`\`
+## Features Overview
 
-**Parameters:**
-| Name | Type | Description |
-|------|------|-------------|
-| param1 | string | Description |
-| param2 | number | Description |
+### Feature 1
+**What it does:** Description
 
-**Returns:** Description of return value
+**How to use:**
+1. Step 1
+2. Step 2
 
-## Examples
+> 💡 **Tip:** Helpful tip about this feature
 
-### Basic Example
-\`\`\`javascript
-// Code example
-\`\`\`
+### Feature 2
+**What it does:** Description
 
-## FAQ
+**How to use:**
+1. Step 1
+2. Step 2
 
-**Q: Question?**
-A: Answer.
+> ⚠️ **Warning:** Important warning
+
+## Common Tasks
+
+### Task 1: [Task Name]
+1.
+2.
+3.
+
+### Task 2: [Task Name]
+1.
+2.
+3.
+
+## Keyboard Shortcuts
+| Action | Windows/Linux | Mac |
+|--------|---------------|-----|
+| Save | Ctrl+S | ⌘+S |
+| Undo | Ctrl+Z | ⌘+Z |
+| Redo | Ctrl+Y | ⌘+Shift+Z |
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Problem | Fix |
+### Issue: [Problem Description]
+**Solution:** How to fix it
+
+### Issue: [Problem Description]
+**Solution:** How to fix it
+
+## FAQ
+
+**Q: Question here?**
+A: Answer here.
+
+**Q: Another question?**
+A: Answer here.
+
+## Getting Help
+- Documentation: [link]
+- Support Email: support@example.com
+- Community Forum: [link]
 
 `
     },
     {
         name: 'Changelog',
+        category: 'Documentation',
         content: `# Changelog
 
 All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
@@ -200,15 +952,260 @@ All notable changes to this project will be documented in this file.
 ### Changed
 -
 
+### Deprecated
+-
+
+### Removed
+-
+
 ### Fixed
 -
+
+### Security
+-
+
+---
 
 ## [1.0.0] - ${new Date().toISOString().split('T')[0]}
 
 ### Added
 - Initial release
-- Feature 1
-- Feature 2
+- Feature 1: Description
+- Feature 2: Description
+
+### Changed
+-
+
+### Fixed
+-
+
+---
+
+## [0.1.0] - YYYY-MM-DD
+
+### Added
+- Initial beta release
+
+`
+    },
+    // Process & Workflow
+    {
+        name: 'Process Documentation',
+        category: 'Process',
+        content: `# Process: [Process Name]
+
+**Owner:**
+**Last Updated:** ${new Date().toLocaleDateString()}
+**Review Frequency:** Quarterly
+
+## Purpose
+Why does this process exist?
+
+## Scope
+What does this process cover and not cover?
+
+## Roles & Responsibilities
+| Role | Responsibilities |
+|------|------------------|
+|  |  |
+
+## Process Flow
+
+\`\`\`
+[Start] → [Step 1] → [Decision?] → Yes → [Step 2] → [End]
+                         ↓
+                        No → [Step 3] → [End]
+\`\`\`
+
+## Detailed Steps
+
+### Step 1: [Step Name]
+**Owner:**
+**Inputs:**
+**Outputs:**
+
+1. Action 1
+2. Action 2
+3. Action 3
+
+### Step 2: [Step Name]
+**Owner:**
+**Inputs:**
+**Outputs:**
+
+1. Action 1
+2. Action 2
+
+## Templates & Tools
+- Template 1: [link]
+- Tool 1: [link]
+
+## Metrics
+| Metric | Target | Current |
+|--------|--------|---------|
+| Processing Time |  |  |
+| Error Rate |  |  |
+
+## Exception Handling
+How to handle edge cases or exceptions.
+
+## Related Processes
+- Process A
+- Process B
+
+## Revision History
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | ${new Date().toISOString().split('T')[0]} |  | Initial version |
+
+`
+    },
+    {
+        name: 'Runbook / Playbook',
+        category: 'Process',
+        content: `# Runbook: [Service/System Name]
+
+**Last Updated:** ${new Date().toLocaleDateString()}
+**On-Call Contact:**
+**Escalation Path:**
+
+---
+
+## Service Overview
+Brief description of the service.
+
+## Architecture
+\`\`\`
+[Component A] → [Component B] → [Database]
+\`\`\`
+
+## Health Checks
+| Check | URL/Command | Expected Result |
+|-------|-------------|-----------------|
+| API Health | \`GET /health\` | 200 OK |
+| DB Connection |  | Connected |
+
+## Common Alerts
+
+### Alert: [Alert Name]
+**Severity:** Critical / Warning / Info
+**Meaning:** What this alert indicates
+
+**Diagnosis:**
+1. Check X
+2. Verify Y
+3. Review logs: \`command\`
+
+**Resolution:**
+1. Step 1
+2. Step 2
+3. Step 3
+
+**Escalation:** When to escalate and to whom
+
+---
+
+### Alert: [Alert Name]
+**Severity:** Critical / Warning / Info
+**Meaning:** What this alert indicates
+
+**Diagnosis:**
+1.
+
+**Resolution:**
+1.
+
+---
+
+## Common Procedures
+
+### Restart Service
+\`\`\`bash
+# Commands to restart
+\`\`\`
+
+### Check Logs
+\`\`\`bash
+# Commands to view logs
+\`\`\`
+
+### Rollback Deployment
+\`\`\`bash
+# Commands to rollback
+\`\`\`
+
+## Useful Commands
+| Purpose | Command |
+|---------|---------|
+| Check status | \`\` |
+| View logs | \`\` |
+| Restart | \`\` |
+
+## Contacts
+| Role | Name | Contact |
+|------|------|---------|
+| Primary On-Call |  |  |
+| Secondary |  |  |
+| Engineering Lead |  |  |
+
+## Post-Incident
+After resolving an incident:
+1. [ ] Update status page
+2. [ ] Notify stakeholders
+3. [ ] Create incident report
+4. [ ] Schedule post-mortem if needed
+
+`
+    },
+    // Simple/Quick Templates
+    {
+        name: 'Quick Note',
+        category: 'Quick',
+        content: `# Note:
+
+**Date:** ${new Date().toLocaleDateString()}
+
+## Summary
+
+
+## Details
+
+
+## Action Items
+- [ ]
+- [ ]
+
+`
+    },
+    {
+        name: 'Simple Table',
+        category: 'Quick',
+        content: `# Table Title
+
+| Column 1 | Column 2 | Column 3 |
+|----------|----------|----------|
+| Data | Data | Data |
+| Data | Data | Data |
+| Data | Data | Data |
+
+`
+    },
+    {
+        name: 'Checklist',
+        category: 'Quick',
+        content: `# Checklist:
+
+**Date:** ${new Date().toLocaleDateString()}
+
+## Items
+- [ ] Item 1
+- [ ] Item 2
+- [ ] Item 3
+- [ ] Item 4
+- [ ] Item 5
+
+## Notes
+
 
 `
     }
@@ -235,16 +1232,24 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     const [showFindReplace, setShowFindReplace] = useState(false);
     const [findText, setFindText] = useState('');
     const [replaceText, setReplaceText] = useState('');
-    const [findResults, setFindResults] = useState<{ count: number; current: number; positions: number[] }>({ count: 0, current: 0, positions: [] });
+    const [findResults, setFindResults] = useState<{ count: number; current: number }>({ count: 0, current: 0 });
     const [showTemplates, setShowTemplates] = useState(false);
+    const [showTablePicker, setShowTablePicker] = useState(false);
+    const [tableSize, setTableSize] = useState<{ rows: number; cols: number }>({ rows: 3, cols: 3 });
+    const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number }>({ row: 0, col: 0 });
     const editorRef = useRef<Editor | null>(null);
     const currentMarkdownRef = useRef<string>(initialValue);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const statsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const rafIdRef = useRef<number | null>(null);
     const findInputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const findPositionsRef = useRef<number[]>([]);
+    const findDataRef = useRef<{ positions: number[]; searchLength: number }>({ positions: [], searchLength: 0 });
+    const getEditorRef = useRef<(() => Editor | undefined) | undefined>(undefined);
+    const lastSaveStatusRef = useRef<SaveStatus>('saved');
 
     // Determine effective theme
     const effectiveTheme = theme === 'auto'
@@ -254,22 +1259,20 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     // Cleanup timeouts on unmount
     useEffect(() => {
         return () => {
-            if (saveTimeoutRef.current) {
-                clearTimeout(saveTimeoutRef.current);
-            }
-            if (updateTimeoutRef.current) {
-                clearTimeout(updateTimeoutRef.current);
-            }
-            if (statsTimeoutRef.current) {
-                clearTimeout(statsTimeoutRef.current);
-            }
+            if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+            if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+            if (statsTimeoutRef.current) clearTimeout(statsTimeoutRef.current);
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+            if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+            if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
         };
     }, []);
 
-    // Calculate statistics
+    // Calculate statistics (optimized - uses regex match instead of split/filter)
     const updateStats = useCallback((text: string) => {
-        const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
         const chars = text.length;
+        const wordMatches = text.match(WORD_MATCH_REGEX);
+        const words = wordMatches ? wordMatches.length : 0;
         setWordCount(words);
         setCharCount(chars);
     }, []);
@@ -306,14 +1309,24 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
                             updateStats(markdown);
                         }, 250);
 
-                        // Debounce save status indicator
-                        setSaveStatus('unsaved');
+                        // Debounce save status indicator with RAF batching to reduce re-renders
+                        if (lastSaveStatusRef.current !== 'unsaved') {
+                            lastSaveStatusRef.current = 'unsaved';
+                            if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+                            rafIdRef.current = requestAnimationFrame(() => {
+                                setSaveStatus('unsaved');
+                            });
+                        }
                         if (saveTimeoutRef.current) {
                             clearTimeout(saveTimeoutRef.current);
                         }
                         saveTimeoutRef.current = setTimeout(() => {
+                            lastSaveStatusRef.current = 'saving';
                             setSaveStatus('saving');
-                            setTimeout(() => setSaveStatus('saved'), 300);
+                            setTimeout(() => {
+                                lastSaveStatusRef.current = 'saved';
+                                setSaveStatus('saved');
+                            }, 300);
                         }, 500);
                     });
                 })
@@ -334,6 +1347,29 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     useEffect(() => {
         updateStats(initialValue);
     }, [initialValue, updateStats]);
+
+    // Sync stable editor reference for use in callbacks
+    useEffect(() => {
+        getEditorRef.current = get;
+    }, [get]);
+
+    // Centralized focus helper to prevent race conditions
+    const scheduleFocus = useCallback((element: HTMLElement | null, delay = 0) => {
+        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+        if (!element) return;
+
+        const doFocus = () => {
+            requestAnimationFrame(() => {
+                if (document.body.contains(element)) element.focus();
+            });
+        };
+
+        if (delay > 0) {
+            focusTimeoutRef.current = setTimeout(doFocus, delay);
+        } else {
+            doFocus();
+        }
+    }, []);
 
     // Toolbar actions - simplified with error handling
     const executeCommand = useCallback((command: Parameters<typeof callCommand>[0], payload?: unknown) => {
@@ -433,16 +1469,320 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
         }
     };
 
-    const insertTable = () => {
-        if (!get) return;
-        const rowsStr = window.prompt('How many rows?', '3');
-        const colsStr = window.prompt('How many columns?', '3');
-        if (!rowsStr || !colsStr) return;
+    // Toggle table picker visibility
+    const toggleTablePicker = () => {
+        setShowTablePicker(!showTablePicker);
+        setHoveredCell({ row: 0, col: 0 });
+    };
 
-        const rows = parseInt(rowsStr, 10);
-        const cols = parseInt(colsStr, 10);
-        if (!isNaN(rows) && !isNaN(cols) && rows > 0 && cols > 0) {
-            executeCommand(insertTableCommand.key, { row: rows, col: cols });
+    // Insert table with specified dimensions (minimum 2 rows to have header + data)
+    const insertTableWithSize = (rows: number, cols: number) => {
+        if (!get) return;
+        // Enforce minimum 2 rows (1 header + 1 data row)
+        const actualRows = Math.max(2, rows);
+        if (actualRows > 0 && cols > 0) {
+            executeCommand(insertTableCommand.key, { row: actualRows, col: cols });
+        }
+        setShowTablePicker(false);
+        setHoveredCell({ row: 0, col: 0 });
+    };
+
+    // Helper to create an empty cell with proper content structure
+    const createEmptyCell = (state: { schema: { nodes: Record<string, { create: (attrs: null, content?: ProseMirrorNode | ProseMirrorNode[]) => ProseMirrorNode } | undefined> } }, cellTypeName: string): ProseMirrorNode | null => {
+        const cellType = state.schema.nodes[cellTypeName];
+        const paragraphType = state.schema.nodes.paragraph;
+        if (!cellType) return null;
+
+        // Create cell with empty paragraph inside (required structure for table cells)
+        if (paragraphType) {
+            const emptyParagraph = paragraphType.create(null);
+            return cellType.create(null, emptyParagraph);
+        }
+        return cellType.create(null);
+    };
+
+    // Add row to existing table at cursor position
+    const addTableRow = () => {
+        if (!get) return;
+        try {
+            const editor = get();
+            if (!editor) return;
+
+            const view = editor.ctx.get(editorViewCtx);
+            if (!view) return;
+
+            const { state, dispatch } = view;
+            const { selection } = state;
+            const $from = selection.$from;
+
+            // Find table position by walking up the document tree
+            let tableDepth = -1;
+            let tableNode: ProseMirrorNode | null = null;
+            let rowIndex = -1;
+
+            for (let depth = $from.depth; depth >= 0; depth--) {
+                const node = $from.node(depth);
+                if (node.type.name === 'table') {
+                    tableDepth = depth;
+                    tableNode = node;
+                    // Find which row we're in
+                    for (let d = $from.depth; d > depth; d--) {
+                        const n = $from.node(d);
+                        if (n.type.name === 'table_row') {
+                            rowIndex = $from.index(d - 1);
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (tableDepth === -1 || !tableNode || rowIndex === -1) {
+                alert('Place your cursor inside a table to add a row.');
+                return;
+            }
+
+            // Get the number of columns from the first row
+            const firstRow = tableNode.firstChild;
+            if (!firstRow) return;
+            const numCols = firstRow.childCount;
+
+            // Create new row with empty cells
+            const cells: ProseMirrorNode[] = [];
+            for (let i = 0; i < numCols; i++) {
+                const newCell = createEmptyCell(state, 'table_cell');
+                if (newCell) cells.push(newCell);
+            }
+
+            if (cells.length === 0) return;
+
+            const tableRowType = state.schema.nodes.table_row;
+            if (!tableRowType) return;
+
+            const newRow = tableRowType.create(null, cells);
+
+            // Insert after current row
+            const tableStart = $from.before(tableDepth);
+            let insertPos = tableStart + 1; // Start after table open tag
+
+            // Calculate position after the target row
+            for (let i = 0; i <= rowIndex; i++) {
+                const row = tableNode.child(i);
+                insertPos += row.nodeSize;
+            }
+
+            const tr = state.tr.insert(insertPos, newRow);
+            dispatch(tr);
+            setShowTablePicker(false);
+        } catch (e) {
+            console.error('Error adding row:', e);
+        }
+    };
+
+    // Add column to existing table
+    const addTableColumn = () => {
+        if (!get) return;
+        try {
+            const editor = get();
+            if (!editor) return;
+
+            const view = editor.ctx.get(editorViewCtx);
+            if (!view) return;
+
+            const { state, dispatch } = view;
+            const { selection } = state;
+            const $from = selection.$from;
+
+            // Find table and current column
+            let tableDepth = -1;
+            let tableNode: ProseMirrorNode | null = null;
+            let colIndex = 0;
+
+            for (let depth = $from.depth; depth >= 0; depth--) {
+                const node = $from.node(depth);
+                if (node.type.name === 'table') {
+                    tableDepth = depth;
+                    tableNode = node;
+                    break;
+                }
+                if (node.type.name === 'table_cell' || node.type.name === 'table_header') {
+                    // Get the index within the row
+                    colIndex = $from.index(depth - 1);
+                }
+            }
+
+            if (tableDepth === -1 || !tableNode) {
+                alert('Place your cursor inside a table to add a column.');
+                return;
+            }
+
+            const tableStart = $from.before(tableDepth);
+            const tableRowType = state.schema.nodes.table_row;
+            const tableType = state.schema.nodes.table;
+            if (!tableRowType || !tableType) return;
+
+            // Build new table with extra column
+            const newRows: ProseMirrorNode[] = [];
+            let isFirstRow = true;
+
+            tableNode.forEach((row) => {
+                const newCells: ProseMirrorNode[] = [];
+                let cellIdx = 0;
+
+                row.forEach((cell) => {
+                    // Copy existing cell
+                    newCells.push(cell.copy(cell.content));
+
+                    // Insert new cell after current column
+                    if (cellIdx === colIndex) {
+                        const cellTypeName = isFirstRow ? 'table_header' : 'table_cell';
+                        // Try table_header first, fall back to table_cell if not available
+                        let newCell = createEmptyCell(state, cellTypeName);
+                        if (!newCell) {
+                            newCell = createEmptyCell(state, 'table_cell');
+                        }
+                        if (newCell) newCells.push(newCell);
+                    }
+                    cellIdx++;
+                });
+
+                const newRow = tableRowType.create(null, newCells);
+                newRows.push(newRow);
+                isFirstRow = false;
+            });
+
+            const newTable = tableType.create(tableNode.attrs, newRows);
+            const tableEnd = $from.after(tableDepth);
+            const tr = state.tr.replaceWith(tableStart, tableEnd, newTable);
+            dispatch(tr);
+            setShowTablePicker(false);
+        } catch (e) {
+            console.error('Error adding column:', e);
+        }
+    };
+
+    // Delete current row from table
+    const deleteTableRow = () => {
+        if (!get) return;
+        try {
+            const editor = get();
+            if (!editor) return;
+
+            const view = editor.ctx.get(editorViewCtx);
+            if (!view) return;
+
+            const { state, dispatch } = view;
+            const { selection } = state;
+            const $from = selection.$from;
+
+            // Find the table to check row count
+            let tableNode: ProseMirrorNode | null = null;
+            for (let depth = $from.depth; depth >= 0; depth--) {
+                const node = $from.node(depth);
+                if (node.type.name === 'table') {
+                    tableNode = node;
+                    break;
+                }
+            }
+
+            // Check if deleting would leave only header row (need at least 2 rows)
+            if (tableNode && tableNode.childCount <= 2) {
+                alert('Cannot delete row - tables need at least 2 rows (header + data). Delete the table instead.');
+                setShowTablePicker(false);
+                return;
+            }
+
+            for (let depth = $from.depth; depth >= 0; depth--) {
+                const node = $from.node(depth);
+                if (node.type.name === 'table_row') {
+                    const start = $from.before(depth);
+                    const end = $from.after(depth);
+                    const tr = state.tr.delete(start, end);
+                    dispatch(tr);
+                    setShowTablePicker(false);
+                    return;
+                }
+            }
+            alert('Place your cursor inside a table row to delete it.');
+        } catch (e) {
+            console.error('Error deleting row:', e);
+        }
+        setShowTablePicker(false);
+    };
+
+    // Delete current column from table
+    const deleteTableColumn = () => {
+        if (!get) return;
+        try {
+            const editor = get();
+            if (!editor) return;
+
+            const view = editor.ctx.get(editorViewCtx);
+            if (!view) return;
+
+            const { state, dispatch } = view;
+            const { selection } = state;
+            const $from = selection.$from;
+
+            // Find the table and current column index
+            let tableDepth = -1;
+            let tableNode: ProseMirrorNode | null = null;
+            let currentColIndex = 0;
+
+            for (let depth = $from.depth; depth >= 0; depth--) {
+                const node = $from.node(depth);
+                if (node.type.name === 'table') {
+                    tableDepth = depth;
+                    tableNode = node;
+                    break;
+                }
+                if (node.type.name === 'table_cell' || node.type.name === 'table_header') {
+                    currentColIndex = $from.index(depth - 1);
+                }
+            }
+
+            if (tableDepth === -1 || !tableNode) {
+                alert('Place your cursor inside a table to delete a column.');
+                setShowTablePicker(false);
+                return;
+            }
+
+            const tableStart = $from.before(tableDepth);
+
+            // Check if table would be empty
+            const firstRow = tableNode.firstChild;
+            if (firstRow && firstRow.childCount <= 1) {
+                alert('Cannot delete the last column. Delete the table instead.');
+                setShowTablePicker(false);
+                return;
+            }
+
+            const tableRowType = state.schema.nodes.table_row;
+            const tableType = state.schema.nodes.table;
+            if (!tableRowType || !tableType) return;
+
+            // Build new table without the column
+            const newRows: ProseMirrorNode[] = [];
+            tableNode.forEach((row) => {
+                const newCells: ProseMirrorNode[] = [];
+                let cellIdx = 0;
+                row.forEach((cell) => {
+                    if (cellIdx !== currentColIndex) {
+                        newCells.push(cell.copy(cell.content));
+                    }
+                    cellIdx++;
+                });
+                const newRow = tableRowType.create(null, newCells);
+                newRows.push(newRow);
+            });
+
+            const newTable = tableType.create(tableNode.attrs, newRows);
+            const tableEnd = $from.after(tableDepth);
+            const tr = state.tr.replaceWith(tableStart, tableEnd, newTable);
+            dispatch(tr);
+            setShowTablePicker(false);
+        } catch (e) {
+            console.error('Error deleting column:', e);
         }
     };
 
@@ -468,14 +1808,16 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
                     const end = pos.after(depth);
                     const tr = state.tr.delete(start, end);
                     dispatch(tr);
+                    setShowTablePicker(false);
                     return;
                 }
             }
             // No table found at cursor position
             alert('Place your cursor inside a table to delete it.');
-        } catch {
-            // Silently handle errors
+        } catch (e) {
+            console.error('Error deleting table:', e);
         }
+        setShowTablePicker(false);
     };
 
     const copyToClipboard = async () => {
@@ -490,22 +1832,149 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
 
     // Find & Replace functions
     const toggleFindReplace = () => {
-        setShowFindReplace(!showFindReplace);
-        if (!showFindReplace) {
-            setTimeout(() => findInputRef.current?.focus(), 100);
+        const willShow = !showFindReplace;
+        setShowFindReplace(willShow);
+        if (willShow) {
+            scheduleFocus(findInputRef.current, 100);
+        } else {
+            // Clear highlights when closing the panel
+            clearSearchHighlights();
         }
     };
 
+    // Apply highlight decorations to all matches
+    const applySearchHighlights = useCallback((positions: number[], searchLength: number, currentIndex: number) => {
+        const currentGet = getEditorRef.current;
+        if (!currentGet) return;
+
+        try {
+            const editor = currentGet();
+            if (!editor) return;
+
+            const view = editor.ctx.get(editorViewCtx);
+            if (!view) return;
+
+            // Create decorations for all matches
+            const decorations: Decoration[] = [];
+            positions.forEach((pos, idx) => {
+                const from = pos;
+                const to = pos + searchLength;
+                // Current match gets a different class
+                const className = idx === currentIndex ? 'search-highlight-current' : 'search-highlight';
+                decorations.push(
+                    Decoration.inline(from, to, { class: className })
+                );
+            });
+
+            // Create decoration set and apply via setProps
+            const decorationSet = decorations.length > 0
+                ? DecorationSet.create(view.state.doc, decorations)
+                : DecorationSet.empty;
+
+            // Apply decorations to the view
+            view.setProps({
+                decorations: () => decorationSet
+            });
+        } catch {
+            // Silently handle errors
+        }
+    }, []);
+
+    // Clear all search highlights
+    const clearSearchHighlights = useCallback(() => {
+        const currentGet = getEditorRef.current;
+        if (!currentGet) return;
+
+        try {
+            const editor = currentGet();
+            if (!editor) return;
+
+            const view = editor.ctx.get(editorViewCtx);
+            if (!view) return;
+
+            view.setProps({
+                decorations: () => DecorationSet.empty
+            });
+        } catch {
+            // Silently handle errors
+        }
+    }, []);
+
+    // Select and highlight a match in the editor (defined before handleFind to avoid hoisting issues)
+    const selectMatchAtIndex = useCallback((index: number) => {
+        const { positions, searchLength } = findDataRef.current;
+        if (positions.length === 0 || index < 0 || index >= positions.length) return;
+
+        const currentGet = getEditorRef.current;
+        if (!currentGet) return;
+
+        try {
+            const editor = currentGet();
+            if (!editor) return;
+
+            const view = editor.ctx.get(editorViewCtx);
+            if (!view) return;
+
+            const { state, dispatch } = view;
+            const from = positions[index];
+            const to = from + searchLength; // Use stored length, not current findText.length
+
+            // Update highlights to show current match differently
+            applySearchHighlights(positions, searchLength, index);
+
+            // Create a selection at the match position
+            const selection = TextSelection.create(state.doc, from, to);
+            const tr = state.tr.setSelection(selection);
+            dispatch(tr);
+
+            // Use requestAnimationFrame for scroll to ensure DOM is updated
+            requestAnimationFrame(() => {
+                try {
+                    // Scroll only within the editor wrapper container (not the browser)
+                    const wrapper = containerRef.current?.querySelector('.markdown-editor-wrapper') as HTMLElement;
+                    if (!wrapper) return;
+
+                    const coords = view.coordsAtPos(from);
+                    if (coords) {
+                        const wrapperRect = wrapper.getBoundingClientRect();
+                        const relativeTop = coords.top - wrapperRect.top;
+                        const wrapperHeight = wrapper.clientHeight;
+
+                        // Check if the match is outside the visible area of the wrapper
+                        if (relativeTop < 0 || relativeTop > wrapperHeight - 30) {
+                            // Scroll to center the match within the wrapper
+                            wrapper.scrollTo({
+                                top: wrapper.scrollTop + relativeTop - wrapperHeight / 2,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
+                } catch {
+                    // Silently handle scroll errors
+                }
+
+                // Focus editor (without scrolling) then return focus to find input
+                view.dom.focus({ preventScroll: true });
+                scheduleFocus(findInputRef.current, 50);
+            });
+        } catch {
+            // Silently handle errors
+        }
+    }, [scheduleFocus, applySearchHighlights]);
+
     const handleFind = useCallback((autoSelect = false) => {
         if (!findText) {
-            setFindResults({ count: 0, current: 0, positions: [] });
+            findDataRef.current = { positions: [], searchLength: 0 };
+            setFindResults({ count: 0, current: 0 });
+            clearSearchHighlights();
             return;
         }
 
-        if (!get) return;
+        const currentGet = getEditorRef.current;
+        if (!currentGet) return;
 
         try {
-            const editor = get();
+            const editor = currentGet();
             if (!editor) return;
 
             const view = editor.ctx.get(editorViewCtx);
@@ -527,13 +1996,19 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
                 }
             });
 
-            // Update both state and ref
-            findPositionsRef.current = positions;
+            // Store positions and search length in ref for navigation functions
+            findDataRef.current = { positions, searchLength: findText.length };
             setFindResults({
                 count: positions.length,
-                current: positions.length > 0 ? 1 : 0,
-                positions
+                current: positions.length > 0 ? 1 : 0
             });
+
+            // Apply highlights to all matches (first match is current by default)
+            if (positions.length > 0) {
+                applySearchHighlights(positions, findText.length, 0);
+            } else {
+                clearSearchHighlights();
+            }
 
             // Only select match if explicitly requested (e.g., pressing Enter)
             if (autoSelect && positions.length > 0) {
@@ -542,73 +2017,27 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
         } catch {
             // Fallback to simple text search
             const content = currentMarkdownRef.current;
-            const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            const regex = new RegExp(findText.replace(ESCAPE_REGEX, '\\$&'), 'gi');
             const matches = content.match(regex);
-            setFindResults({ count: matches?.length || 0, current: matches?.length ? 1 : 0, positions: [] });
+            findDataRef.current = { positions: [], searchLength: findText.length };
+            setFindResults({ count: matches?.length || 0, current: matches?.length ? 1 : 0 });
+            clearSearchHighlights();
         }
-    }, [findText, get]);
-
-    // Select and highlight a match in the editor
-    const selectMatchAtIndex = useCallback((index: number) => {
-        const positions = findPositionsRef.current;
-        if (!get || positions.length === 0 || index < 0 || index >= positions.length) return;
-
-        try {
-            const editor = get();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            const { state, dispatch } = view;
-            const from = positions[index];
-            const to = from + findText.length;
-
-            // Create a selection at the match position (without scrollIntoView which scrolls the whole page)
-            const selection = TextSelection.create(state.doc, from, to);
-            const tr = state.tr.setSelection(selection);
-            dispatch(tr);
-
-            // Manually scroll only within the editor container
-            setTimeout(() => {
-                const selectionCoords = view.coordsAtPos(from);
-                const editorWrapper = containerRef.current?.querySelector('.markdown-editor-wrapper');
-                if (editorWrapper && selectionCoords) {
-                    const wrapperRect = editorWrapper.getBoundingClientRect();
-                    const relativeTop = selectionCoords.top - wrapperRect.top;
-
-                    // Only scroll if the selection is outside the visible area
-                    if (relativeTop < 0 || relativeTop > wrapperRect.height - 50) {
-                        editorWrapper.scrollTop += relativeTop - wrapperRect.height / 2;
-                    }
-                }
-            }, 10);
-
-            // Focus the editor to show the selection
-            view.focus();
-
-            // Return focus to find input so user can keep navigating
-            setTimeout(() => findInputRef.current?.focus(), 50);
-        } catch {
-            // Silently handle errors
-        }
-    }, [findText, get]);
+    }, [findText, selectMatchAtIndex, applySearchHighlights, clearSearchHighlights]);
 
     // Navigate to next match
     const findNext = useCallback(() => {
-        const positions = findPositionsRef.current;
+        const { positions } = findDataRef.current;
         if (positions.length === 0) return;
 
-        // Use functional update to get the most current state
         setFindResults(prev => {
-            const count = prev.count;
-            if (count === 0) return prev;
+            if (prev.count === 0) return prev;
 
             // Calculate next index (1-based for display)
-            const nextIndex = prev.current >= count ? 1 : prev.current + 1;
+            const nextIndex = prev.current >= prev.count ? 1 : prev.current + 1;
 
-            // Select the match at the 0-based index
-            setTimeout(() => selectMatchAtIndex(nextIndex - 1), 0);
+            // Use requestAnimationFrame for better timing
+            requestAnimationFrame(() => selectMatchAtIndex(nextIndex - 1));
 
             return { ...prev, current: nextIndex };
         });
@@ -616,53 +2045,86 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
 
     // Navigate to previous match
     const findPrevious = useCallback(() => {
-        const positions = findPositionsRef.current;
+        const { positions } = findDataRef.current;
         if (positions.length === 0) return;
 
-        // Use functional update to get the most current state
         setFindResults(prev => {
-            const count = prev.count;
-            if (count === 0) return prev;
+            if (prev.count === 0) return prev;
 
             // Calculate previous index (1-based for display)
-            const prevIndex = prev.current <= 1 ? count : prev.current - 1;
+            const prevIndex = prev.current <= 1 ? prev.count : prev.current - 1;
 
-            // Select the match at the 0-based index
-            setTimeout(() => selectMatchAtIndex(prevIndex - 1), 0);
+            // Use requestAnimationFrame for better timing
+            requestAnimationFrame(() => selectMatchAtIndex(prevIndex - 1));
 
             return { ...prev, current: prevIndex };
         });
     }, [selectMatchAtIndex]);
 
     const handleReplace = () => {
-        if (!findText || !get) return;
-        const content = currentMarkdownRef.current;
-        const newContent = content.replace(findText, replaceText);
-        if (newContent !== content) {
-            // Update via editor
-            const view = get()?.ctx.get(editorViewCtx);
-            if (view) {
-                const { state, dispatch } = view;
-                const tr = state.tr.replaceWith(0, state.doc.content.size, state.schema.text(newContent));
-                dispatch(tr);
+        const currentGet = getEditorRef.current;
+        if (!findText || !currentGet) return;
+
+        try {
+            const editor = currentGet();
+            if (!editor) return;
+
+            const content = currentMarkdownRef.current;
+            const newContent = content.replace(findText, replaceText);
+
+            if (newContent !== content) {
+                const view = editor.ctx.get(editorViewCtx);
+                const parser = editor.ctx.get(parserCtx);
+
+                if (view && parser) {
+                    // Parse the new markdown content to preserve formatting
+                    const newDoc = parser(newContent);
+                    if (newDoc) {
+                        const { state, dispatch } = view;
+                        const tr = state.tr.replaceWith(0, state.doc.content.size, newDoc.content);
+                        dispatch(tr);
+                    }
+                }
+
+                handleFind();
             }
-            handleFind();
+        } catch {
+            // Silently handle errors
         }
     };
 
     const handleReplaceAll = () => {
-        if (!findText || !get) return;
-        const content = currentMarkdownRef.current;
-        const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-        const newContent = content.replace(regex, replaceText);
-        if (newContent !== content) {
-            const view = get()?.ctx.get(editorViewCtx);
-            if (view) {
-                const { state, dispatch } = view;
-                const tr = state.tr.replaceWith(0, state.doc.content.size, state.schema.text(newContent));
-                dispatch(tr);
+        const currentGet = getEditorRef.current;
+        if (!findText || !currentGet) return;
+
+        try {
+            const editor = currentGet();
+            if (!editor) return;
+
+            const content = currentMarkdownRef.current;
+            const regex = new RegExp(findText.replace(ESCAPE_REGEX, '\\$&'), 'g');
+            const newContent = content.replace(regex, replaceText);
+
+            if (newContent !== content) {
+                const view = editor.ctx.get(editorViewCtx);
+                const parser = editor.ctx.get(parserCtx);
+
+                if (view && parser) {
+                    // Parse the new markdown content to preserve formatting
+                    const newDoc = parser(newContent);
+                    if (newDoc) {
+                        const { state, dispatch } = view;
+                        const tr = state.tr.replaceWith(0, state.doc.content.size, newDoc.content);
+                        dispatch(tr);
+                    }
+                }
+
+                findDataRef.current = { positions: [], searchLength: 0 };
+                setFindResults({ count: 0, current: 0 });
+                clearSearchHighlights();
             }
-            setFindResults({ count: 0, current: 0, positions: [] });
+        } catch {
+            // Silently handle errors
         }
     };
 
@@ -675,15 +2137,30 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
             }
             if (e.key === 'Escape' && showFindReplace) {
                 setShowFindReplace(false);
+                clearSearchHighlights();
             }
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showFindReplace]);
+    }, [showFindReplace, clearSearchHighlights]);
 
-    // Update find results when search text changes (don't auto-select to keep focus in input)
+    // Debounced search - 100ms delay for balanced performance
     useEffect(() => {
-        handleFind(false);
+        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+        if (!findText) {
+            findDataRef.current = { positions: [], searchLength: 0 };
+            setFindResults({ count: 0, current: 0 });
+            return;
+        }
+
+        searchTimeoutRef.current = setTimeout(() => {
+            handleFind(false);
+        }, 100);
+
+        return () => {
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+        };
     }, [findText, handleFind]);
 
     // Export to HTML
@@ -1662,13 +3139,14 @@ ${html}
         const handleClickOutside = (e: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
                 setShowTemplates(false);
+                setShowTablePicker(false);
             }
         };
-        if (showTemplates) {
+        if (showTemplates || showTablePicker) {
             document.addEventListener('mousedown', handleClickOutside);
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
-    }, [showTemplates]);
+    }, [showTemplates, showTablePicker]);
 
     // Helper function to detect if text looks like markdown
     const looksLikeMarkdown = (text: string): boolean => {
@@ -1947,22 +3425,62 @@ ${html}
                     >
                         {'</>'}
                     </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={insertTable}
-                        title="Insert Table"
-                        aria-label="Insert Table"
-                    >
-                        ⊞ Table
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={deleteTable}
-                        title="Delete Table (click inside table first)"
-                        aria-label="Delete Table"
-                    >
-                        ⊟ Del Table
-                    </button>
+                    <div className="toolbar-dropdown-container">
+                        <button
+                            className={`toolbar-button ${showTablePicker ? 'active' : ''}`}
+                            onClick={toggleTablePicker}
+                            title="Table Options"
+                            aria-label="Table Options"
+                        >
+                            ⊞ Table ▾
+                        </button>
+                        {showTablePicker && (
+                            <div className={`toolbar-dropdown table-dropdown ${effectiveTheme}`}>
+                                <div className="dropdown-section-header">Insert New Table</div>
+                                <div className="table-size-picker">
+                                    <div className="table-grid">
+                                        {Array.from({ length: 6 }).map((_, rowIndex) => (
+                                            <div key={rowIndex} className="table-grid-row">
+                                                {Array.from({ length: 6 }).map((_, colIndex) => (
+                                                    <div
+                                                        key={colIndex}
+                                                        className={`table-grid-cell ${
+                                                            rowIndex <= hoveredCell.row && colIndex <= hoveredCell.col
+                                                                ? 'highlighted'
+                                                                : ''
+                                                        }`}
+                                                        onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
+                                                        onClick={() => insertTableWithSize(rowIndex + 1, colIndex + 1)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="table-size-label">
+                                        {Math.max(2, hoveredCell.row + 1)} × {hoveredCell.col + 1} (min 2 rows)
+                                    </div>
+                                </div>
+                                <div className="dropdown-divider" />
+                                <div className="dropdown-section-header">Edit Existing Table</div>
+                                <button className="dropdown-item" onClick={addTableRow}>
+                                    ➕ Add Row Below
+                                </button>
+                                <button className="dropdown-item" onClick={addTableColumn}>
+                                    ➕ Add Column Right
+                                </button>
+                                <button className="dropdown-item" onClick={deleteTableRow}>
+                                    ➖ Delete Row
+                                </button>
+                                <button className="dropdown-item" onClick={deleteTableColumn}>
+                                    ➖ Delete Column
+                                </button>
+                                <div className="dropdown-divider" />
+                                <button className="dropdown-item dropdown-item-danger" onClick={deleteTable}>
+                                    🗑 Delete Entire Table
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     <button
                         className="toolbar-button"
                         onClick={insertBlockquote}
@@ -2027,15 +3545,24 @@ ${html}
                             📄 Templates
                         </button>
                         {showTemplates && (
-                            <div className={`toolbar-dropdown ${effectiveTheme}`}>
-                                {MARKDOWN_TEMPLATES.map((template, index) => (
-                                    <button
-                                        key={index}
-                                        className="dropdown-item"
-                                        onClick={() => insertTemplate(template)}
-                                    >
-                                        {template.name}
-                                    </button>
+                            <div className={`toolbar-dropdown templates-dropdown ${effectiveTheme}`}>
+                                {/* Group templates by category */}
+                                {Array.from(new Set(MARKDOWN_TEMPLATES.map(t => t.category))).map((category, catIndex) => (
+                                    <div key={category} className="dropdown-category">
+                                        {catIndex > 0 && <div className="dropdown-divider" />}
+                                        <div className="dropdown-section-header">{category}</div>
+                                        {MARKDOWN_TEMPLATES
+                                            .filter(t => t.category === category)
+                                            .map((template, index) => (
+                                                <button
+                                                    key={`${category}-${index}`}
+                                                    className="dropdown-item"
+                                                    onClick={() => insertTemplate(template)}
+                                                >
+                                                    {template.name}
+                                                </button>
+                                            ))}
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -2101,7 +3628,7 @@ ${html}
                             Replace All
                         </button>
                     </div>
-                    <button className="find-close" onClick={() => setShowFindReplace(false)}>×</button>
+                    <button className="find-close" onClick={() => { setShowFindReplace(false); clearSearchHighlights(); }}>×</button>
                 </div>
             )}
 
