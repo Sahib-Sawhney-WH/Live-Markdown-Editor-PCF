@@ -6,7 +6,7 @@ import { gfm } from '@milkdown/preset-gfm';
 import { nord } from '@milkdown/theme-nord';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { Editor, rootCtx, defaultValueCtx, editorViewCtx, parserCtx } from '@milkdown/core';
-import { callCommand } from '@milkdown/utils';
+import { callCommand } from '@milkdown/kit/utils';
 import {
     toggleStrongCommand,
     toggleEmphasisCommand,

@@ -1,6 +1,6 @@
 {
   "name": "markdown-editor-pcf",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "A feature-rich Markdown editor PCF control with GitHub Flavored Markdown support, built using React and Milkdown for Power Apps.",
   "keywords": [
     "powerapps",
@@ -40,7 +40,6 @@
     "@milkdown/core": "^7.17.1",
     "@milkdown/ctx": "^7.17.1",
     "@milkdown/plugin-listener": "^7.17.1",
-    "@milkdown/plugin-table": "^5.3.1",
     "@milkdown/preset-commonmark": "^7.17.1",
     "@milkdown/prose": "^7.17.1",
     "@milkdown/react": "^7.17.1",
