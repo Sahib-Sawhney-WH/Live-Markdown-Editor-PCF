@@ -12,6 +12,7 @@ dist/
 .pcf/
 generated/
 MarkdownEditorControl/generated/
+obj/
 
 # TypeScript cache
 *.tsbuildinfo
