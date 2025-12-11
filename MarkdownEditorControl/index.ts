@@ -81,16 +81,15 @@ export class MarkdownEditorControl implements ComponentFramework.StandardControl
             : "light";
         const showToolbar = context.parameters.showToolbar?.raw !== false;
         const enableSpellCheck = context.parameters.enableSpellCheck?.raw !== false;
-        const rows = context.parameters.rows?.raw || 10;
+        const rowsParam = context.parameters.rows?.raw;
+        const rows = rowsParam || 10;
 
         // Get allocated dimensions from context
-        const allocatedHeight = context.mode.allocatedHeight;
         const allocatedWidth = context.mode.allocatedWidth;
 
-        // Calculate height: use allocatedHeight if available, otherwise calculate from rows
-        // Each row is approximately 24px, plus ~80px for toolbar and padding
-        const rowHeight = rows * 24 + 80;
-        const height = allocatedHeight > 0 ? allocatedHeight : rowHeight;
+        // Calculate height from rows setting
+        // Each row is approximately 28px (matching standard textarea), plus ~80px for toolbar and padding
+        const height = rows * 28 + 80;
         const width = allocatedWidth > 0 ? allocatedWidth : undefined;
 
         // Create root if it doesn't exist
