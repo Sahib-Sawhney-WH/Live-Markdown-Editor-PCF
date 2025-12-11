@@ -152,6 +152,7 @@ The control accepts the following input parameters (defined in `ControlManifest.
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `value` | Multiple Lines of Text | "" | The markdown content (bound property) |
+| `rows` | Whole.None | 10 | Number of rows (controls height: rows × 28px + 80px) |
 | `readOnly` | Two Options | false | Whether the editor is read-only |
 | `theme` | SingleLine.Text | "light" | Theme: light, dark, auto, high-contrast |
 | `showToolbar` | Two Options | true | Show/hide the formatting toolbar |

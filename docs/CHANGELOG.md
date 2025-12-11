@@ -5,7 +5,36 @@ All notable changes to the Markdown Editor PCF Control will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.1] - 2025-12-08
+## [1.4.3] - 2025-12-11
+
+### Fixed
+- Rows property now always controls height (no longer overridden by allocatedHeight)
+- Increased row height from 24px to 28px to match standard textarea behavior
+
+### Technical
+- Height formula: `rows × 28px + 80px` (e.g., 22 rows = 696px)
+
+---
+
+## [1.4.2] - 2025-12-11
+
+### Added
+- **Rows property**: Configurable number of rows to control editor height
+- Default: 10 rows (~360px with toolbar)
+- Visible in Power Apps control configuration
+
+### Technical
+- Added `rows` input property to ControlManifest
+- Height calculated as `rows × 24px + 80px`
+
+---
+
+## [1.4.1] - 2025-12-10
+
+### Added
+- **Solution project**: Added Solution folder for Power Apps deployment
+- Publisher: RSM (prefix: `rsm`)
+- Control name: `rsm_ModernMarkdownEditor.MarkdownEditorControl`
 
 ### Fixed
 - Fixed `callCommand` import path from `@milkdown/utils` to `@milkdown/kit/utils` for Milkdown v7 compatibility
@@ -163,7 +192,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
-| 1.4.1 | 2025-12-08 | Fixed Milkdown import paths, removed unused dependencies |
+| 1.4.3 | 2025-12-11 | Fixed rows height calculation to match standard textarea |
+| 1.4.2 | 2025-12-11 | Added rows property for configurable height |
+| 1.4.1 | 2025-12-10 | Added Solution project, fixed Milkdown imports |
 | 1.4.0 | 2025-12-05 | 20+ templates, visual table picker, table row/column management, Find & Replace fixes |
 | 1.3.0 | 2025-11-26 | Performance optimizations, improved link insertion, HTML export fixes |
 | 1.2.0 | 2025-01-20 | PDF export, image paste, responsive design |
@@ -172,6 +203,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.4.3]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.3
+[1.4.2]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.2
 [1.4.1]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.1
 [1.4.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.0
 [1.3.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.3.0
