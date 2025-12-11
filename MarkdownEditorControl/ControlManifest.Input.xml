@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="ModernMarkdownEditor" constructor="MarkdownEditorControl" version="1.4.1" display-name-key="Markdown Editor" description-key="WYSIWYG Markdown editor with GFM support, export options, and Dataverse integration" control-type="standard" >
+  <control namespace="ModernMarkdownEditor" constructor="MarkdownEditorControl" version="1.4.2" display-name-key="Markdown Editor" description-key="WYSIWYG Markdown editor with GFM support, export options, and Dataverse integration" control-type="standard" >
     <external-service-usage enabled="false">
     </external-service-usage>
 
@@ -8,6 +8,7 @@
     <property name="value" display-name-key="Markdown Content" description-key="The Markdown text content to display and edit" of-type="Multiple" usage="bound" required="true" />
 
     <!-- Configuration properties -->
+    <property name="rows" display-name-key="Rows" description-key="Number of rows to display (controls height, default: 10)" of-type="Whole.None" usage="input" required="false" />
     <property name="maxLength" display-name-key="Max Length" description-key="Maximum character limit (default: 100000)" of-type="Whole.None" usage="input" required="false" />
     <property name="readOnly" display-name-key="Read Only" description-key="Make editor read-only" of-type="TwoOptions" usage="input" required="false" />
     <property name="theme" display-name-key="Theme" description-key="Editor theme: light, dark, auto, or high-contrast" of-type="SingleLine.Text" usage="input" required="false" />
