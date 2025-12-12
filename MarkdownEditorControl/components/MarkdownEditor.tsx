@@ -3294,7 +3294,7 @@ ${html}
         <div
             ref={containerRef}
             className={`markdown-editor-container ${effectiveTheme} ${readOnly ? 'read-only' : ''} ${getResponsiveClass()}`}
-            style={height ? { height: `${height}px` } : undefined}
+            style={height ? { height: `${height}px`, minHeight: `${height}px`, maxHeight: `${height}px` } : undefined}
         >
             {showToolbar && !readOnly && (
                 <div className={`markdown-toolbar ${effectiveTheme}`}>

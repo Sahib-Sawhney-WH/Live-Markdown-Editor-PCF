@@ -88,8 +88,8 @@ export class MarkdownEditorControl implements ComponentFramework.StandardControl
         const allocatedWidth = context.mode.allocatedWidth;
 
         // Calculate height from rows setting
-        // Each row is approximately 28px (matching standard textarea), plus ~80px for toolbar and padding
-        const height = rows * 28 + 80;
+        // Each row is approximately 54px (calibrated to match Power Apps web resource at 22 rows)
+        const height = rows * 54 + 50;
         const width = allocatedWidth > 0 ? allocatedWidth : undefined;
 
         // Create root if it doesn't exist
