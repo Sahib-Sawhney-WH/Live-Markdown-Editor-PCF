@@ -1,11 +1,13 @@
 # Markdown Editor PCF Control
 
-A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) control using React and Milkdown.
+A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) control using React and Milkdown, featuring Microsoft Fluent 2.0 design language.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)
 ![PCF](https://img.shields.io/badge/PCF-1.0-green.svg)
 ![React](https://img.shields.io/badge/React-19.2.0-61dafb.svg)
 ![Milkdown](https://img.shields.io/badge/Milkdown-7.17.1-ff6188.svg)
+![Fluent UI](https://img.shields.io/badge/Fluent_UI-2.0-0078d4.svg)
 
 ## Features
 
@@ -14,6 +16,14 @@ A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) c
 - **CommonMark**: Standard markdown syntax for headings, lists, links, images, code blocks, and more
 - **WYSIWYG Editing**: Visual editing without needing to know markdown syntax
 - **Live Rendering**: Content is formatted in real-time as you type
+
+### Fluent 2.0 Design (New in v1.5.0)
+- **Fluent UI Icons**: Crisp, modern SVG icons throughout the interface
+- **Glassmorphism Effects**: Subtle backdrop blur on toolbar and dropdowns
+- **Enhanced Shadows**: Multi-layered shadows for depth and elevation
+- **Gradient Accents**: Subtle gradients on active buttons and toolbars
+- **Smooth Animations**: 150ms transitions for polished interactions
+- **Grouped Toolbar**: Logically organized button groups with visual containers
 
 ### Interactive Toolbar
 - **Undo/Redo**: Full history support with keyboard shortcuts
@@ -229,6 +239,7 @@ For detailed Dataverse setup instructions, see [DATAVERSE_INTEGRATION.md](DATAVE
 - **PCF Framework**: Power Apps Component Framework
 - **React 19.2.0**: UI library with hooks
 - **Milkdown 7.17.1**: WYSIWYG markdown editor built on ProseMirror
+- **@fluentui/react-icons 2.0.315**: Microsoft Fluent UI icon library
 - **@milkdown/preset-commonmark**: CommonMark markdown support
 - **@milkdown/preset-gfm**: GitHub Flavored Markdown support
 - **@milkdown/theme-nord**: Nord theme for editor styling
@@ -240,8 +251,8 @@ For detailed Dataverse setup instructions, see [DATAVERSE_INTEGRATION.md](DATAVE
 
 ### Bundle Size
 
-- Production bundle: ~4.5 MiB
-- Includes React, Milkdown, all plugins, jsPDF, html2canvas, and dependencies
+- Production bundle: ~7.0 MiB
+- Includes React, Milkdown, Fluent UI Icons, jsPDF, html2canvas, and dependencies
 
 ### Browser Support
 
@@ -345,5 +356,5 @@ For issues, questions, or contributions:
 
 ---
 
-Version: 1.4.0
+Version: 1.5.0
 Last Updated: December 2025

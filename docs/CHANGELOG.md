@@ -5,6 +5,40 @@ All notable changes to the Markdown Editor PCF Control will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-12-15
+
+### Added
+- **Fluent 2.0 Visual Redesign**: Complete visual overhaul using Microsoft Fluent 2.0 design language
+- **Fluent UI Icons**: All toolbar icons replaced with crisp SVG icons from @fluentui/react-icons
+- **Glassmorphism Effects**: Subtle backdrop blur on toolbar, dropdowns, and panels
+- **Enhanced Shadows**: Multi-layered shadows for depth and professional appearance
+- **Gradient Accents**: Subtle gradients on active buttons, toolbar, and status bar
+- **Grouped Toolbar**: Buttons organized into logical visual groups (History, Headings, Formatting, etc.)
+- **CSS Design Tokens**: Full token-based theming system for consistent styling
+
+### Changed
+- Toolbar icons increased from 18px to 20px for better visibility
+- Icon color changed from muted gray to full contrast for clarity
+- Added `shape-rendering: geometricPrecision` for sharper SVG rendering
+- Dropdown z-index increased to prevent clipping behind editor
+- Find & Replace panel right-padded to prevent close button overlap
+- Close button reduced from 28px to 24px for better proportions
+
+### Fixed
+- Dropdowns no longer appear behind editor content (z-index stacking fix)
+- Container overflow changed from hidden to visible for proper dropdown display
+- Find navigation buttons now work immediately (no longer requires multiple clicks)
+- Screen shake eliminated when navigating find results (instant scroll vs smooth)
+- Table display no longer broken by `display: block` CSS rule
+
+### Technical
+- Added @fluentui/react-icons dependency (v2.0.315)
+- Bundle size increased from ~4.5 MiB to ~7.0 MiB (Fluent icons library)
+- Dark theme tokens updated for glassmorphism effects
+- Solution renamed from "Solution" to "RSMMarkdownEditor"
+
+---
+
 ## [1.4.3] - 2025-12-11
 
 ### Fixed
@@ -192,6 +226,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.5.0 | 2025-12-15 | Fluent 2.0 visual redesign, Fluent UI icons, glassmorphism, enhanced UX |
 | 1.4.3 | 2025-12-11 | Fixed rows height calculation to match standard textarea |
 | 1.4.2 | 2025-12-11 | Added rows property for configurable height |
 | 1.4.1 | 2025-12-10 | Added Solution project, fixed Milkdown imports |
@@ -203,6 +238,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.5.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.5.0
 [1.4.3]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.3
 [1.4.2]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.2
 [1.4.1]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.1

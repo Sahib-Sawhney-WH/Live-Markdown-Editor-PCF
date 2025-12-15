@@ -27,6 +27,42 @@ import { TextSelection } from '@milkdown/prose/state';
 import { Decoration, DecorationSet } from '@milkdown/prose/view';
 import { Node as ProseMirrorNode } from '@milkdown/prose/model';
 
+// Fluent UI Icons
+import {
+    ArrowUndoRegular,
+    ArrowRedoRegular,
+    TextBoldRegular,
+    TextItalicRegular,
+    TextStrikethroughRegular,
+    TextHeader1Regular,
+    TextHeader2Regular,
+    TextHeader3Regular,
+    TextParagraphRegular,
+    LinkRegular,
+    ImageRegular,
+    TextBulletListLtrRegular,
+    TextNumberListLtrRegular,
+    CodeRegular,
+    TableRegular,
+    TextQuoteRegular,
+    LineHorizontal1Regular,
+    CopyRegular,
+    CheckmarkRegular,
+    SearchRegular,
+    ArrowDownloadRegular,
+    DocumentPdfRegular,
+    DocumentRegular,
+    ChevronDownRegular,
+    ChevronUpRegular,
+    DismissRegular,
+    AddRegular,
+    SubtractRegular,
+    DeleteRegular,
+    CheckmarkCircleRegular,
+    ArrowSyncRegular,
+    CircleRegular,
+} from '@fluentui/react-icons';
+
 // Module-level regex constants (compiled once)
 const ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
 const WORD_MATCH_REGEX = /\S+/g;
@@ -1927,40 +1963,30 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
             const tr = state.tr.setSelection(selection);
             dispatch(tr);
 
-            // Use requestAnimationFrame for scroll to ensure DOM is updated
-            requestAnimationFrame(() => {
-                try {
-                    // Scroll only within the editor wrapper container (not the browser)
-                    const wrapper = containerRef.current?.querySelector('.markdown-editor-wrapper') as HTMLElement;
-                    if (!wrapper) return;
-
+            // Scroll to match if needed (instant, no animation to prevent shake)
+            try {
+                const wrapper = containerRef.current?.querySelector('.markdown-editor-wrapper') as HTMLElement;
+                if (wrapper) {
                     const coords = view.coordsAtPos(from);
                     if (coords) {
                         const wrapperRect = wrapper.getBoundingClientRect();
                         const relativeTop = coords.top - wrapperRect.top;
                         const wrapperHeight = wrapper.clientHeight;
 
-                        // Check if the match is outside the visible area of the wrapper
-                        if (relativeTop < 0 || relativeTop > wrapperHeight - 30) {
-                            // Scroll to center the match within the wrapper
-                            wrapper.scrollTo({
-                                top: wrapper.scrollTop + relativeTop - wrapperHeight / 2,
-                                behavior: 'smooth'
-                            });
+                        // Check if the match is outside the visible area
+                        if (relativeTop < 0 || relativeTop > wrapperHeight - 50) {
+                            // Instant scroll to center the match
+                            wrapper.scrollTop = wrapper.scrollTop + relativeTop - wrapperHeight / 2;
                         }
                     }
-                } catch {
-                    // Silently handle scroll errors
                 }
-
-                // Focus editor (without scrolling) then return focus to find input
-                view.dom.focus({ preventScroll: true });
-                scheduleFocus(findInputRef.current, 50);
-            });
+            } catch {
+                // Silently handle scroll errors
+            }
         } catch {
             // Silently handle errors
         }
-    }, [scheduleFocus, applySearchHighlights]);
+    }, [applySearchHighlights]);
 
     const handleFind = useCallback((autoSelect = false) => {
         if (!findText) {
@@ -2027,6 +2053,12 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
 
     // Navigate to next match
     const findNext = useCallback(() => {
+        // If search hasn't run yet but we have text, run it now
+        if (findDataRef.current.positions.length === 0 && findText) {
+            handleFind(true); // true = auto-select first match
+            return;
+        }
+
         const { positions } = findDataRef.current;
         if (positions.length === 0) return;
 
@@ -2041,10 +2073,16 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
 
             return { ...prev, current: nextIndex };
         });
-    }, [selectMatchAtIndex]);
+    }, [selectMatchAtIndex, findText, handleFind]);
 
     // Navigate to previous match
     const findPrevious = useCallback(() => {
+        // If search hasn't run yet but we have text, run it now
+        if (findDataRef.current.positions.length === 0 && findText) {
+            handleFind(true); // true = auto-select first match
+            return;
+        }
+
         const { positions } = findDataRef.current;
         if (positions.length === 0) return;
 
@@ -2059,7 +2097,7 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
 
             return { ...prev, current: prevIndex };
         });
-    }, [selectMatchAtIndex]);
+    }, [selectMatchAtIndex, findText, handleFind]);
 
     const handleReplace = () => {
         const currentGet = getEditorRef.current;
@@ -3298,251 +3336,287 @@ ${html}
         >
             {showToolbar && !readOnly && (
                 <div className={`markdown-toolbar ${effectiveTheme}`}>
-                    <button
-                        className="toolbar-button"
-                        onClick={handleUndo}
-                        title="Undo (Ctrl+Z)"
-                        aria-label="Undo"
-                    >
-                        ↶
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={handleRedo}
-                        title="Redo (Ctrl+Y)"
-                        aria-label="Redo"
-                    >
-                        ↷
-                    </button>
-
-                    <div className="toolbar-divider" />
-
-                    <button
-                        className="toolbar-button"
-                        onClick={() => insertHeading(1)}
-                        title="Heading 1 (Ctrl+Alt+1)"
-                        aria-label="Insert Heading 1"
-                    >
-                        H1
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={() => insertHeading(2)}
-                        title="Heading 2 (Ctrl+Alt+2)"
-                        aria-label="Insert Heading 2"
-                    >
-                        H2
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={() => insertHeading(3)}
-                        title="Heading 3 (Ctrl+Alt+3)"
-                        aria-label="Insert Heading 3"
-                    >
-                        H3
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={clearHeading}
-                        title="Paragraph (Ctrl+Alt+0)"
-                        aria-label="Clear Heading Formatting"
-                    >
-                        P
-                    </button>
-
-                    <div className="toolbar-divider" />
-
-                    <button
-                        className="toolbar-button"
-                        onClick={toggleBold}
-                        title="Bold (Ctrl+B)"
-                        aria-label="Toggle Bold"
-                    >
-                        <strong>B</strong>
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={toggleItalic}
-                        title="Italic (Ctrl+I)"
-                        aria-label="Toggle Italic"
-                    >
-                        <em>I</em>
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={toggleStrikethrough}
-                        title="Strikethrough (Ctrl+Shift+S)"
-                        aria-label="Toggle Strikethrough"
-                    >
-                        <s>S</s>
-                    </button>
-
-                    <div className="toolbar-divider" />
-
-                    <button
-                        className="toolbar-button"
-                        onClick={insertLink}
-                        title="Insert Link (Ctrl+K)"
-                        aria-label="Insert Link"
-                    >
-                        🔗
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={insertImage}
-                        title="Insert Image"
-                        aria-label="Insert Image"
-                    >
-                        🖼️
-                    </button>
-
-                    <div className="toolbar-divider" />
-
-                    <button
-                        className="toolbar-button"
-                        onClick={insertBulletList}
-                        title="Bullet List"
-                        aria-label="Insert Bullet List"
-                    >
-                        • List
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={insertOrderedList}
-                        title="Numbered List"
-                        aria-label="Insert Numbered List"
-                    >
-                        1. List
-                    </button>
-
-                    <div className="toolbar-divider" />
-
-                    <button
-                        className="toolbar-button"
-                        onClick={insertCode}
-                        title="Code Block"
-                        aria-label="Insert Code Block"
-                    >
-                        {'</>'}
-                    </button>
-                    <div className="toolbar-dropdown-container">
+                    {/* History Group */}
+                    <div className="toolbar-group" aria-label="History">
                         <button
-                            className={`toolbar-button ${showTablePicker ? 'active' : ''}`}
-                            onClick={toggleTablePicker}
-                            title="Table Options"
-                            aria-label="Table Options"
+                            className="toolbar-button"
+                            onClick={handleUndo}
+                            title="Undo (Ctrl+Z)"
+                            aria-label="Undo"
                         >
-                            ⊞ Table ▾
+                            <span className="toolbar-button-icon"><ArrowUndoRegular /></span>
                         </button>
-                        {showTablePicker && (
-                            <div className={`toolbar-dropdown table-dropdown ${effectiveTheme}`}>
-                                <div className="dropdown-section-header">Insert New Table</div>
-                                <div className="table-size-picker">
-                                    <div className="table-grid">
-                                        {Array.from({ length: 6 }).map((_, rowIndex) => (
-                                            <div key={rowIndex} className="table-grid-row">
-                                                {Array.from({ length: 6 }).map((_, colIndex) => (
-                                                    <div
-                                                        key={colIndex}
-                                                        className={`table-grid-cell ${
-                                                            rowIndex <= hoveredCell.row && colIndex <= hoveredCell.col
-                                                                ? 'highlighted'
-                                                                : ''
-                                                        }`}
-                                                        onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
-                                                        onClick={() => insertTableWithSize(rowIndex + 1, colIndex + 1)}
-                                                    />
-                                                ))}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div className="table-size-label">
-                                        {Math.max(2, hoveredCell.row + 1)} × {hoveredCell.col + 1} (min 2 rows)
-                                    </div>
-                                </div>
-                                <div className="dropdown-divider" />
-                                <div className="dropdown-section-header">Edit Existing Table</div>
-                                <button className="dropdown-item" onClick={addTableRow}>
-                                    ➕ Add Row Below
-                                </button>
-                                <button className="dropdown-item" onClick={addTableColumn}>
-                                    ➕ Add Column Right
-                                </button>
-                                <button className="dropdown-item" onClick={deleteTableRow}>
-                                    ➖ Delete Row
-                                </button>
-                                <button className="dropdown-item" onClick={deleteTableColumn}>
-                                    ➖ Delete Column
-                                </button>
-                                <div className="dropdown-divider" />
-                                <button className="dropdown-item dropdown-item-danger" onClick={deleteTable}>
-                                    🗑 Delete Entire Table
-                                </button>
-                            </div>
-                        )}
+                        <button
+                            className="toolbar-button"
+                            onClick={handleRedo}
+                            title="Redo (Ctrl+Y)"
+                            aria-label="Redo"
+                        >
+                            <span className="toolbar-button-icon"><ArrowRedoRegular /></span>
+                        </button>
                     </div>
-                    <button
-                        className="toolbar-button"
-                        onClick={insertBlockquote}
-                        title="Blockquote"
-                        aria-label="Insert Blockquote"
-                    >
-                        ❝
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={insertHorizontalRule}
-                        title="Horizontal Rule"
-                        aria-label="Insert Horizontal Rule"
-                    >
-                        ―
-                    </button>
 
                     <div className="toolbar-divider" />
 
-                    <button
-                        className={`toolbar-button ${copyStatus === 'copied' ? 'copy-success' : ''}`}
-                        onClick={copyToClipboard}
-                        title="Copy to Clipboard"
-                        aria-label="Copy markdown to clipboard"
-                    >
-                        {copyStatus === 'copied' ? '✓' : '📋'}
-                    </button>
-                    <button
-                        className={`toolbar-button ${showFindReplace ? 'active' : ''}`}
-                        onClick={toggleFindReplace}
-                        title="Find & Replace (Ctrl+F)"
-                        aria-label="Find and Replace"
-                    >
-                        🔍
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={exportToHtml}
-                        title="Export to HTML"
-                        aria-label="Export to HTML"
-                    >
-                        ⬇ HTML
-                    </button>
-                    <button
-                        className="toolbar-button"
-                        onClick={exportToPdf}
-                        title="Export to PDF"
-                        aria-label="Export to PDF"
-                    >
-                        ⬇ PDF
-                    </button>
+                    {/* Headings Group */}
+                    <div className="toolbar-group" aria-label="Headings">
+                        <button
+                            className="toolbar-button"
+                            onClick={() => insertHeading(1)}
+                            title="Heading 1 (Ctrl+Alt+1)"
+                            aria-label="Insert Heading 1"
+                        >
+                            <span className="toolbar-button-icon"><TextHeader1Regular /></span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={() => insertHeading(2)}
+                            title="Heading 2 (Ctrl+Alt+2)"
+                            aria-label="Insert Heading 2"
+                        >
+                            <span className="toolbar-button-icon"><TextHeader2Regular /></span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={() => insertHeading(3)}
+                            title="Heading 3 (Ctrl+Alt+3)"
+                            aria-label="Insert Heading 3"
+                        >
+                            <span className="toolbar-button-icon"><TextHeader3Regular /></span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={clearHeading}
+                            title="Paragraph (Ctrl+Alt+0)"
+                            aria-label="Clear Heading Formatting"
+                        >
+                            <span className="toolbar-button-icon"><TextParagraphRegular /></span>
+                        </button>
+                    </div>
 
                     <div className="toolbar-divider" />
 
+                    {/* Text Formatting Group */}
+                    <div className="toolbar-group" aria-label="Text Formatting">
+                        <button
+                            className="toolbar-button"
+                            onClick={toggleBold}
+                            title="Bold (Ctrl+B)"
+                            aria-label="Toggle Bold"
+                        >
+                            <span className="toolbar-button-icon"><TextBoldRegular /></span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={toggleItalic}
+                            title="Italic (Ctrl+I)"
+                            aria-label="Toggle Italic"
+                        >
+                            <span className="toolbar-button-icon"><TextItalicRegular /></span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={toggleStrikethrough}
+                            title="Strikethrough (Ctrl+Shift+S)"
+                            aria-label="Toggle Strikethrough"
+                        >
+                            <span className="toolbar-button-icon"><TextStrikethroughRegular /></span>
+                        </button>
+                    </div>
+
+                    <div className="toolbar-divider" />
+
+                    {/* Insert Group */}
+                    <div className="toolbar-group" aria-label="Insert">
+                        <button
+                            className="toolbar-button"
+                            onClick={insertLink}
+                            title="Insert Link (Ctrl+K)"
+                            aria-label="Insert Link"
+                        >
+                            <span className="toolbar-button-icon"><LinkRegular /></span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={insertImage}
+                            title="Insert Image"
+                            aria-label="Insert Image"
+                        >
+                            <span className="toolbar-button-icon"><ImageRegular /></span>
+                        </button>
+                    </div>
+
+                    <div className="toolbar-divider" />
+
+                    {/* Lists Group */}
+                    <div className="toolbar-group" aria-label="Lists">
+                        <button
+                            className="toolbar-button"
+                            onClick={insertBulletList}
+                            title="Bullet List"
+                            aria-label="Insert Bullet List"
+                        >
+                            <span className="toolbar-button-icon"><TextBulletListLtrRegular /></span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={insertOrderedList}
+                            title="Numbered List"
+                            aria-label="Insert Numbered List"
+                        >
+                            <span className="toolbar-button-icon"><TextNumberListLtrRegular /></span>
+                        </button>
+                    </div>
+
+                    <div className="toolbar-divider" />
+
+                    {/* Blocks Group */}
+                    <div className="toolbar-group" aria-label="Blocks">
+                        <button
+                            className="toolbar-button"
+                            onClick={insertCode}
+                            title="Code Block"
+                            aria-label="Insert Code Block"
+                        >
+                            <span className="toolbar-button-icon"><CodeRegular /></span>
+                        </button>
+                        <div className="toolbar-dropdown-container">
+                            <button
+                                className={`toolbar-button toolbar-dropdown-trigger ${showTablePicker ? 'active' : ''}`}
+                                onClick={toggleTablePicker}
+                                title="Table Options"
+                                aria-label="Table Options"
+                                aria-expanded={showTablePicker}
+                            >
+                                <span className="toolbar-button-icon"><TableRegular /></span>
+                                <span className="toolbar-button-icon dropdown-chevron"><ChevronDownRegular /></span>
+                            </button>
+                            {showTablePicker && (
+                                <div className={`toolbar-dropdown table-dropdown ${effectiveTheme}`}>
+                                    <div className="dropdown-section-header">Insert New Table</div>
+                                    <div className="table-size-picker">
+                                        <div className="table-grid">
+                                            {Array.from({ length: 6 }).map((_, rowIndex) => (
+                                                <div key={rowIndex} className="table-grid-row">
+                                                    {Array.from({ length: 6 }).map((_, colIndex) => (
+                                                        <div
+                                                            key={colIndex}
+                                                            className={`table-grid-cell ${
+                                                                rowIndex <= hoveredCell.row && colIndex <= hoveredCell.col
+                                                                    ? 'highlighted'
+                                                                    : ''
+                                                            }`}
+                                                            onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
+                                                            onClick={() => insertTableWithSize(rowIndex + 1, colIndex + 1)}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="table-size-label">
+                                            {Math.max(2, hoveredCell.row + 1)} × {hoveredCell.col + 1} (min 2 rows)
+                                        </div>
+                                    </div>
+                                    <div className="dropdown-divider" />
+                                    <div className="dropdown-section-header">Edit Existing Table</div>
+                                    <button className="dropdown-item" onClick={addTableRow}>
+                                        <span className="dropdown-icon"><AddRegular /></span>
+                                        <span>Add Row Below</span>
+                                    </button>
+                                    <button className="dropdown-item" onClick={addTableColumn}>
+                                        <span className="dropdown-icon"><AddRegular /></span>
+                                        <span>Add Column Right</span>
+                                    </button>
+                                    <button className="dropdown-item" onClick={deleteTableRow}>
+                                        <span className="dropdown-icon"><SubtractRegular /></span>
+                                        <span>Delete Row</span>
+                                    </button>
+                                    <button className="dropdown-item" onClick={deleteTableColumn}>
+                                        <span className="dropdown-icon"><SubtractRegular /></span>
+                                        <span>Delete Column</span>
+                                    </button>
+                                    <div className="dropdown-divider" />
+                                    <button className="dropdown-item dropdown-item-danger" onClick={deleteTable}>
+                                        <span className="dropdown-icon"><DeleteRegular /></span>
+                                        <span>Delete Entire Table</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            className="toolbar-button"
+                            onClick={insertBlockquote}
+                            title="Blockquote"
+                            aria-label="Insert Blockquote"
+                        >
+                            <span className="toolbar-button-icon"><TextQuoteRegular /></span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={insertHorizontalRule}
+                            title="Horizontal Rule"
+                            aria-label="Insert Horizontal Rule"
+                        >
+                            <span className="toolbar-button-icon"><LineHorizontal1Regular /></span>
+                        </button>
+                    </div>
+
+                    <div className="toolbar-divider" />
+
+                    {/* Actions Group */}
+                    <div className="toolbar-group" aria-label="Actions">
+                        <button
+                            className={`toolbar-button ${copyStatus === 'copied' ? 'copy-success' : ''}`}
+                            onClick={copyToClipboard}
+                            title="Copy to Clipboard"
+                            aria-label="Copy markdown to clipboard"
+                        >
+                            <span className="toolbar-button-icon">
+                                {copyStatus === 'copied' ? <CheckmarkRegular /> : <CopyRegular />}
+                            </span>
+                        </button>
+                        <button
+                            className={`toolbar-button ${showFindReplace ? 'active' : ''}`}
+                            onClick={toggleFindReplace}
+                            title="Find & Replace (Ctrl+F)"
+                            aria-label="Find and Replace"
+                        >
+                            <span className="toolbar-button-icon"><SearchRegular /></span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={exportToHtml}
+                            title="Export to HTML"
+                            aria-label="Export to HTML"
+                        >
+                            <span className="toolbar-button-icon"><ArrowDownloadRegular /></span>
+                            <span className="toolbar-button-label">HTML</span>
+                        </button>
+                        <button
+                            className="toolbar-button"
+                            onClick={exportToPdf}
+                            title="Export to PDF"
+                            aria-label="Export to PDF"
+                        >
+                            <span className="toolbar-button-icon"><DocumentPdfRegular /></span>
+                            <span className="toolbar-button-label">PDF</span>
+                        </button>
+                    </div>
+
+                    <div className="toolbar-divider" />
+
+                    {/* Templates Dropdown */}
                     <div className="toolbar-dropdown-container">
                         <button
-                            className={`toolbar-button ${showTemplates ? 'active' : ''}`}
+                            className={`toolbar-button toolbar-dropdown-trigger ${showTemplates ? 'active' : ''}`}
                             onClick={() => setShowTemplates(!showTemplates)}
                             title="Insert Template"
                             aria-label="Insert Template"
+                            aria-expanded={showTemplates}
                         >
-                            📄 Templates
+                            <span className="toolbar-button-icon"><DocumentRegular /></span>
+                            <span className="toolbar-button-label">Templates</span>
+                            <span className="toolbar-button-icon dropdown-chevron"><ChevronDownRegular /></span>
                         </button>
                         {showTemplates && (
                             <div className={`toolbar-dropdown templates-dropdown ${effectiveTheme}`}>
@@ -3567,7 +3641,6 @@ ${html}
                             </div>
                         )}
                     </div>
-
                 </div>
             )}
 
@@ -3575,31 +3648,34 @@ ${html}
             {showFindReplace && (
                 <div className={`find-replace-panel ${effectiveTheme}`}>
                     <div className="find-replace-row">
-                        <input
-                            ref={findInputRef}
-                            type="text"
-                            placeholder="Find..."
-                            value={findText}
-                            onChange={(e) => setFindText(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    if (e.shiftKey) {
-                                        findPrevious();
-                                    } else {
-                                        findNext();
+                        <div className="find-input-wrapper">
+                            <span className="find-input-icon"><SearchRegular /></span>
+                            <input
+                                ref={findInputRef}
+                                type="text"
+                                placeholder="Find..."
+                                value={findText}
+                                onChange={(e) => setFindText(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        if (e.shiftKey) {
+                                            findPrevious();
+                                        } else {
+                                            findNext();
+                                        }
                                     }
-                                }
-                            }}
-                            className="find-input"
-                        />
+                                }}
+                                className="find-input with-icon"
+                            />
+                        </div>
                         <button
                             className="find-nav-button"
                             onClick={findPrevious}
                             disabled={findResults.count === 0}
                             title="Previous match (Shift+Enter)"
                         >
-                            ▲
+                            <ChevronUpRegular />
                         </button>
                         <button
                             className="find-nav-button"
@@ -3607,7 +3683,7 @@ ${html}
                             disabled={findResults.count === 0}
                             title="Next match (Enter)"
                         >
-                            ▼
+                            <ChevronDownRegular />
                         </button>
                         <span className="find-results">
                             {findResults.count > 0 ? `${findResults.current} of ${findResults.count}` : 'No results'}
@@ -3624,11 +3700,13 @@ ${html}
                         <button className="find-button" onClick={handleReplace} disabled={findResults.count === 0}>
                             Replace
                         </button>
-                        <button className="find-button" onClick={handleReplaceAll} disabled={findResults.count === 0}>
+                        <button className="find-button find-button-secondary" onClick={handleReplaceAll} disabled={findResults.count === 0}>
                             Replace All
                         </button>
                     </div>
-                    <button className="find-close" onClick={() => { setShowFindReplace(false); clearSearchHighlights(); }}>×</button>
+                    <button className="find-close" onClick={() => { setShowFindReplace(false); clearSearchHighlights(); }}>
+                        <DismissRegular />
+                    </button>
                 </div>
             )}
 
@@ -3655,19 +3733,33 @@ ${html}
             </div>
 
             <div className={`markdown-status-bar ${effectiveTheme}`}>
-                <div className="status-item">
-                    <span className={`save-status save-status-${saveStatus}`}>
-                        {saveStatus === 'saved' && '✓ Saved'}
-                        {saveStatus === 'saving' && '⟳ Saving...'}
-                        {saveStatus === 'unsaved' && '● Unsaved'}
-                    </span>
+                <div className="status-item save-status-container">
+                    {saveStatus === 'saved' && (
+                        <>
+                            <span className="status-icon status-icon-saved"><CheckmarkCircleRegular /></span>
+                            <span className="save-status save-status-saved">Saved</span>
+                        </>
+                    )}
+                    {saveStatus === 'saving' && (
+                        <>
+                            <span className="status-icon status-icon-saving spinning"><ArrowSyncRegular /></span>
+                            <span className="save-status save-status-saving">Saving...</span>
+                        </>
+                    )}
+                    {saveStatus === 'unsaved' && (
+                        <>
+                            <span className="status-icon status-icon-unsaved"><CircleRegular /></span>
+                            <span className="save-status save-status-unsaved">Unsaved</span>
+                        </>
+                    )}
                 </div>
                 <div className="status-item">
-                    <span>Words: {wordCount}</span>
-                    <span>Characters: {charCount} / {maxLength}</span>
+                    <span className="status-metric">Words: {wordCount}</span>
+                    <span className="status-separator">|</span>
+                    <span className="status-metric">Characters: {charCount} / {maxLength}</span>
                 </div>
                 {readOnly && (
-                    <div className="status-item">
+                    <div className="status-item status-readonly">
                         <span>Read Only</span>
                     </div>
                 )}
