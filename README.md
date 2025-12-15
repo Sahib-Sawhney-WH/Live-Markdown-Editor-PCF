@@ -3,7 +3,7 @@
 A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) control using React and Milkdown, featuring Microsoft Fluent 2.0 design language.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.5.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)
 ![PCF](https://img.shields.io/badge/PCF-1.0-green.svg)
 ![React](https://img.shields.io/badge/React-19.2.0-61dafb.svg)
 ![Milkdown](https://img.shields.io/badge/Milkdown-7.17.1-ff6188.svg)
@@ -356,5 +356,5 @@ For issues, questions, or contributions:
 
 ---
 
-Version: 1.5.0
+Version: 1.5.1
 Last Updated: December 2025

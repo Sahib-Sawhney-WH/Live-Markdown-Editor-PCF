@@ -5,6 +5,17 @@ All notable changes to the Markdown Editor PCF Control will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2025-12-15
+
+### Fixed
+- **Editor not loading Dataverse content on first open**: Added useEffect to sync external value changes to the editor when data loads after the editor initializes. This fixes the issue where users had to refresh the record to see the markdown content.
+
+### Technical
+- Editor now watches for `initialValue` prop changes and updates the Milkdown editor content when data arrives from Dataverse after initial render
+- Uses ProseMirror parser to convert incoming markdown and replace document content
+
+---
+
 ## [1.5.0] - 2025-12-15
 
 ### Added
@@ -226,6 +237,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.5.1 | 2025-12-15 | Fixed editor not loading Dataverse content on first open |
 | 1.5.0 | 2025-12-15 | Fluent 2.0 visual redesign, Fluent UI icons, glassmorphism, enhanced UX |
 | 1.4.3 | 2025-12-11 | Fixed rows height calculation to match standard textarea |
 | 1.4.2 | 2025-12-11 | Added rows property for configurable height |
@@ -238,6 +250,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.5.1]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.5.1
 [1.5.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.5.0
 [1.4.3]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.3
 [1.4.2]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.2

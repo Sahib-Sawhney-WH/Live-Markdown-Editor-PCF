@@ -1389,6 +1389,37 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
         getEditorRef.current = get;
     }, [get]);
 
+    // Sync external value changes to editor (e.g., when Dataverse data loads after editor init)
+    useEffect(() => {
+        // Skip if editor is still loading
+        if (loading) return;
+        if (!get) return;
+
+        // Only sync if the external value differs from current editor content
+        // This handles the case where Dataverse data loads after the editor initialized with empty content
+        if (initialValue !== currentMarkdownRef.current) {
+            try {
+                const editor = get();
+                if (!editor) return;
+
+                const view = editor.ctx.get(editorViewCtx);
+                const parser = editor.ctx.get(parserCtx);
+
+                // Parse the new markdown into a ProseMirror document
+                const doc = parser(initialValue);
+
+                // Replace the entire document content
+                const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content);
+                view.dispatch(tr);
+
+                // Update our ref to track this as the current content
+                currentMarkdownRef.current = initialValue;
+            } catch {
+                // Silently handle sync errors
+            }
+        }
+    }, [initialValue, loading, get]);
+
     // Centralized focus helper to prevent race conditions
     const scheduleFocus = useCallback((element: HTMLElement | null, delay = 0) => {
         if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
