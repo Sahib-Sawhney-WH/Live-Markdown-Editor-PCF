@@ -478,10 +478,11 @@
     color: var(--fluent-brand-primary-hover);
 }
 
-/* Tables */
+/* Tables - allow horizontal scroll for wide tables */
 .milkdown table {
     border-collapse: collapse;
-    width: 100%;
+    width: max-content;
+    min-width: 100%;
     margin: 1em 0;
     border-radius: var(--fluent-radius-medium);
     box-shadow: var(--fluent-shadow-2);
@@ -489,11 +490,24 @@
     table-layout: auto;
 }
 
+/* Make the editor scrollable horizontally for wide content */
+.milkdown .ProseMirror {
+    overflow-x: auto;
+}
+
 .milkdown th,
 .milkdown td {
     border: 1px solid var(--fluent-border-default);
     padding: var(--fluent-spacing-s) var(--fluent-spacing-m);
     text-align: left;
+    white-space: nowrap;
+}
+
+/* Allow text wrap for cells with long content when user prefers */
+.milkdown td p,
+.milkdown th p {
+    white-space: normal;
+    min-width: 120px;
 }
 
 .milkdown th {
