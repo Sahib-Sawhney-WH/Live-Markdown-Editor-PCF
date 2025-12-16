@@ -61,9 +61,20 @@ import {
     CheckmarkCircleRegular,
     ArrowSyncRegular,
     CircleRegular,
-    WeatherMoonRegular,
-    WeatherSunnyRegular,
 } from '@fluentui/react-icons';
+
+// Inline SVG icons for theme toggle (avoids pulling in extra icon chunks)
+const SunIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zm0 12a4 4 0 100-8 4 4 0 000 8zm0-1.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5zm7.25-2.75a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5zm-13 0a.75.75 0 000-1.5h-1.5a.75.75 0 000 1.5h1.5zm12.02-4.72a.75.75 0 00-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zm-11.44 9.44a.75.75 0 00-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zm11.44 0l-1.06-1.06a.75.75 0 00-1.06 1.06l1.06 1.06a.75.75 0 001.06-1.06zM4.83 5.9a.75.75 0 000-1.07l-1.06-1.06a.75.75 0 00-1.06 1.06l1.06 1.06a.75.75 0 001.06 0zM10 15.25a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V16a.75.75 0 01.75-.75z"/>
+    </svg>
+);
+
+const MoonIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M7.78 2.04a.75.75 0 00-.99.86 5.5 5.5 0 007.32 6.08.75.75 0 01.98.83 7.5 7.5 0 11-8.17-8.76.75.75 0 01.86.99z"/>
+    </svg>
+);
 
 // Module-level regex constants (compiled once)
 const ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
@@ -3702,7 +3713,7 @@ ${html}
                         aria-label={effectiveTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                     >
                         <span className="toolbar-button-icon">
-                            {effectiveTheme === 'dark' ? <WeatherSunnyRegular /> : <WeatherMoonRegular />}
+                            {effectiveTheme === 'dark' ? <SunIcon /> : <MoonIcon />}
                         </span>
                     </button>
                 </div>
