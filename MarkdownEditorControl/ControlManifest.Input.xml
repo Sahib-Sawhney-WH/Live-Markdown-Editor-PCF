@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest>
-  <control namespace="ModernMarkdownEditor" constructor="MarkdownEditorControl" version="1.5.1" display-name-key="Markdown Editor" description-key="WYSIWYG Markdown editor with GFM support, Fluent 2.0 design, and Dataverse integration" control-type="standard" >
+  <control namespace="ModernMarkdownEditor" constructor="MarkdownEditorControl" version="1.5.6" display-name-key="Markdown Editor" description-key="WYSIWYG Markdown editor with GFM support, Fluent 2.0 design, and Dataverse integration" control-type="standard" >
     <external-service-usage enabled="false">
     </external-service-usage>
 

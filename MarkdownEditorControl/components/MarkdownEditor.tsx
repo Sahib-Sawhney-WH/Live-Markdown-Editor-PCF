@@ -61,6 +61,8 @@ import {
     CheckmarkCircleRegular,
     ArrowSyncRegular,
     CircleRegular,
+    WeatherMoonRegular,
+    WeatherSunnyRegular,
 } from '@fluentui/react-icons';
 
 // Module-level regex constants (compiled once)
@@ -1260,8 +1262,9 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     height,
     width
 }) => {
-    const [wordCount, setWordCount] = useState(0);
-    const [charCount, setCharCount] = useState(0);
+    // Use refs instead of state for stats to avoid re-renders on every keystroke
+    const wordCountRef = useRef(0);
+    const charCountRef = useRef(0);
     const [editorError, setEditorError] = useState<string | null>(null);
     const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
@@ -1273,6 +1276,7 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     const [showTablePicker, setShowTablePicker] = useState(false);
     const [tableSize, setTableSize] = useState<{ rows: number; cols: number }>({ rows: 3, cols: 3 });
     const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number }>({ row: 0, col: 0 });
+    const [themeOverride, setThemeOverride] = useState<'light' | 'dark' | null>(null);
     const editorRef = useRef<Editor | null>(null);
     const currentMarkdownRef = useRef<string>(initialValue);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1283,14 +1287,24 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     const rafIdRef = useRef<number | null>(null);
     const findInputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const showFindReplaceRef = useRef(showFindReplace); // Track state in ref for keyboard listener
     const findDataRef = useRef<{ positions: number[]; searchLength: number }>({ positions: [], searchLength: 0 });
     const getEditorRef = useRef<(() => Editor | undefined) | undefined>(undefined);
     const lastSaveStatusRef = useRef<SaveStatus>('saved');
 
-    // Determine effective theme
-    const effectiveTheme = theme === 'auto'
+    // Determine effective theme (local override takes precedence)
+    const baseTheme = theme === 'auto'
         ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
         : theme;
+    const effectiveTheme = themeOverride ?? baseTheme;
+
+    // Toggle between light and dark mode
+    const toggleTheme = useCallback(() => {
+        setThemeOverride(prev => {
+            if (prev === null) return effectiveTheme === 'light' ? 'dark' : 'light';
+            return prev === 'light' ? 'dark' : 'light';
+        });
+    }, [effectiveTheme]);
 
     // Cleanup timeouts on unmount
     useEffect(() => {
@@ -1304,14 +1318,27 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
         };
     }, []);
 
-    // Calculate statistics (optimized - uses regex match instead of split/filter)
+    // Keep showFindReplaceRef in sync with state (for keyboard listener)
+    useEffect(() => {
+        showFindReplaceRef.current = showFindReplace;
+    }, [showFindReplace]);
+
+    // Calculate statistics (optimized - uses refs + direct DOM updates to avoid re-renders)
     const updateStats = useCallback((text: string) => {
         const chars = text.length;
         const wordMatches = text.match(WORD_MATCH_REGEX);
         const words = wordMatches ? wordMatches.length : 0;
-        setWordCount(words);
-        setCharCount(chars);
-    }, []);
+
+        // Update refs (no re-render)
+        wordCountRef.current = words;
+        charCountRef.current = chars;
+
+        // Update DOM directly for instant feedback without re-render
+        const wordEl = document.getElementById('md-word-count');
+        const charEl = document.getElementById('md-char-count');
+        if (wordEl) wordEl.textContent = `Words: ${words}`;
+        if (charEl) charEl.textContent = `Characters: ${chars} / ${maxLength}`;
+    }, [maxLength]);
 
     // Initialize Milkdown editor using React hooks following v7 pattern
     const { loading, get } = useEditor((root) => {
@@ -1329,41 +1356,35 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
                         // Always update ref immediately (no delay)
                         currentMarkdownRef.current = markdown;
 
-                        // Debounce the parent update (PCF binding) - 150ms delay
-                        if (updateTimeoutRef.current) {
-                            clearTimeout(updateTimeoutRef.current);
-                        }
-                        updateTimeoutRef.current = setTimeout(() => {
-                            onUpdate(markdown);
-                        }, 150);
+                        // Update parent immediately - no debounce to prevent data loss
+                        // The PCF framework handles its own batching
+                        onUpdate(markdown);
 
-                        // Debounce stats update separately - 250ms delay
+                        // Debounce stats update only - 200ms delay (cosmetic only)
                         if (statsTimeoutRef.current) {
                             clearTimeout(statsTimeoutRef.current);
                         }
                         statsTimeoutRef.current = setTimeout(() => {
                             updateStats(markdown);
-                        }, 250);
+                        }, 200);
 
-                        // Debounce save status indicator with RAF batching to reduce re-renders
-                        if (lastSaveStatusRef.current !== 'unsaved') {
-                            lastSaveStatusRef.current = 'unsaved';
-                            if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-                            rafIdRef.current = requestAnimationFrame(() => {
-                                setSaveStatus('unsaved');
-                            });
-                        }
+                        // Optimized save status - only update state when status actually changes
                         if (saveTimeoutRef.current) {
                             clearTimeout(saveTimeoutRef.current);
                         }
+
+                        // Only set to 'unsaved' if not already unsaved (avoids re-render)
+                        if (lastSaveStatusRef.current !== 'unsaved') {
+                            lastSaveStatusRef.current = 'unsaved';
+                            setSaveStatus('unsaved');
+                        }
+
                         saveTimeoutRef.current = setTimeout(() => {
-                            lastSaveStatusRef.current = 'saving';
-                            setSaveStatus('saving');
-                            setTimeout(() => {
+                            if (lastSaveStatusRef.current !== 'saved') {
                                 lastSaveStatusRef.current = 'saved';
                                 setSaveStatus('saved');
-                            }, 300);
-                        }, 500);
+                            }
+                        }, 400);
                     });
                 })
                 .use(commonmark)
@@ -1389,36 +1410,33 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
         getEditorRef.current = get;
     }, [get]);
 
-    // Sync external value changes to editor (e.g., when Dataverse data loads after editor init)
+    // Sync editor content when initialValue prop changes (handles late-arriving Dataverse data)
+    // Only updates if editor is empty and new value has content
     useEffect(() => {
-        // Skip if editor is still loading
-        if (loading) return;
-        if (!get) return;
+        const editor = get?.();
+        if (!editor || !initialValue) return;
 
-        // Only sync if the external value differs from current editor content
-        // This handles the case where Dataverse data loads after the editor initialized with empty content
-        if (initialValue !== currentMarkdownRef.current) {
-            try {
-                const editor = get();
-                if (!editor) return;
+        // Only sync if editor is currently empty but props have content
+        const currentContent = currentMarkdownRef.current;
+        if (currentContent && currentContent.trim() !== '') return; // Don't overwrite existing content
 
-                const view = editor.ctx.get(editorViewCtx);
-                const parser = editor.ctx.get(parserCtx);
+        try {
+            const view = editor.ctx.get(editorViewCtx);
+            const parser = editor.ctx.get(parserCtx);
 
-                // Parse the new markdown into a ProseMirror document
+            if (view && parser) {
                 const doc = parser(initialValue);
-
-                // Replace the entire document content
-                const tr = view.state.tr.replaceWith(0, view.state.doc.content.size, doc.content);
-                view.dispatch(tr);
-
-                // Update our ref to track this as the current content
-                currentMarkdownRef.current = initialValue;
-            } catch {
-                // Silently handle sync errors
+                if (doc) {
+                    const { state, dispatch } = view;
+                    const tr = state.tr.replaceWith(0, state.doc.content.size, doc.content);
+                    dispatch(tr);
+                    currentMarkdownRef.current = initialValue;
+                }
             }
+        } catch {
+            // Silently handle errors
         }
-    }, [initialValue, loading, get]);
+    }, [initialValue, get]);
 
     // Centralized focus helper to prevent race conditions
     const scheduleFocus = useCallback((element: HTMLElement | null, delay = 0) => {
@@ -2197,21 +2215,22 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
         }
     };
 
-    // Keyboard shortcuts
+    // Keyboard shortcuts - uses ref to avoid re-registering on state changes
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.ctrlKey && e.key === 'f') {
                 e.preventDefault();
                 toggleFindReplace();
             }
-            if (e.key === 'Escape' && showFindReplace) {
+            // Use ref to check state without causing effect re-registration
+            if (e.key === 'Escape' && showFindReplaceRef.current) {
                 setShowFindReplace(false);
                 clearSearchHighlights();
             }
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [showFindReplace, clearSearchHighlights]);
+    }, []); // Empty deps - registers once, uses refs for state checks
 
     // Debounced search - 100ms delay for balanced performance
     useEffect(() => {
@@ -3672,6 +3691,20 @@ ${html}
                             </div>
                         )}
                     </div>
+
+                    <div className="toolbar-divider" />
+
+                    {/* Theme Toggle */}
+                    <button
+                        className="toolbar-button"
+                        onClick={toggleTheme}
+                        title={effectiveTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                        aria-label={effectiveTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    >
+                        <span className="toolbar-button-icon">
+                            {effectiveTheme === 'dark' ? <WeatherSunnyRegular /> : <WeatherMoonRegular />}
+                        </span>
+                    </button>
                 </div>
             )}
 
@@ -3785,9 +3818,9 @@ ${html}
                     )}
                 </div>
                 <div className="status-item">
-                    <span className="status-metric">Words: {wordCount}</span>
+                    <span id="md-word-count" className="status-metric">Words: {wordCountRef.current}</span>
                     <span className="status-separator">|</span>
-                    <span className="status-metric">Characters: {charCount} / {maxLength}</span>
+                    <span id="md-char-count" className="status-metric">Characters: {charCountRef.current} / {maxLength}</span>
                 </div>
                 {readOnly && (
                     <div className="status-item status-readonly">
@@ -3799,7 +3832,8 @@ ${html}
     );
 };
 
-export const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
+// Memoized wrapper to prevent unnecessary re-renders when parent re-renders with same props
+export const MarkdownEditor: React.FC<MarkdownEditorProps> = React.memo((props) => {
     return (
         <MilkdownProvider>
             <EditorComponent
@@ -3815,4 +3849,17 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = (props) => {
             />
         </MilkdownProvider>
     );
-};
+}, (prev, next) => {
+    // Custom comparison - only re-render when these props actually change
+    return (
+        prev.value === next.value &&
+        prev.readOnly === next.readOnly &&
+        prev.theme === next.theme &&
+        prev.showToolbar === next.showToolbar &&
+        prev.enableSpellCheck === next.enableSpellCheck &&
+        prev.maxLength === next.maxLength &&
+        prev.height === next.height &&
+        prev.width === next.width
+        // onChange is bound once in PCF constructor, always same reference
+    );
+});

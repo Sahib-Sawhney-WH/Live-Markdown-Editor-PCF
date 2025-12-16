@@ -13,6 +13,10 @@ export class MarkdownEditorControl implements ComponentFramework.StandardControl
     private _maxLength: number;
     private _root: Root | null;
     private _boundHandleChange: (value: string) => void;
+    private _hasUserEdited: boolean;
+    private _initialLoadComplete: boolean;
+    private _notifyTimeoutId: ReturnType<typeof setTimeout> | null;
+    private _lastPropsSignature: string;
 
     constructor() {
         this._currentValue = "";
@@ -21,6 +25,10 @@ export class MarkdownEditorControl implements ComponentFramework.StandardControl
         this._isValid = true;
         this._maxLength = 100000;
         this._root = null;
+        this._hasUserEdited = false;
+        this._initialLoadComplete = false;
+        this._notifyTimeoutId = null;
+        this._lastPropsSignature = "";
         // Bind handleChange once in constructor for better performance
         this._boundHandleChange = this.handleChange.bind(this);
     }
@@ -55,10 +63,18 @@ export class MarkdownEditorControl implements ComponentFramework.StandardControl
         // Read the current value from the bound Dataverse field
         const newValue = context.parameters.value?.raw || "";
 
-        // Only update if value changed from external source
-        if (newValue !== this._currentValue) {
+        // Only accept external value updates on initial load, BEFORE user has edited
+        // After user starts editing, the editor is the source of truth
+        if (!this._initialLoadComplete) {
+            // First load - accept the value from Dataverse
+            this._currentValue = newValue;
+            this._initialLoadComplete = true;
+        } else if (!this._hasUserEdited && newValue && newValue !== this._currentValue) {
+            // Initial load might come in multiple updateView calls
+            // Only update if user hasn't edited yet
             this._currentValue = newValue;
         }
+        // Once user has edited, ignore all external value updates
 
         // Update maxLength if changed
         const newMaxLength = context.parameters.maxLength?.raw || 100000;
@@ -66,8 +82,23 @@ export class MarkdownEditorControl implements ComponentFramework.StandardControl
             this._maxLength = newMaxLength;
         }
 
-        // Re-render component with updated props
-        this.renderComponent(context);
+        // Build props signature to detect actual changes
+        const propsSignature = JSON.stringify({
+            value: this._currentValue,
+            readOnly: context.parameters.readOnly?.raw,
+            theme: context.parameters.theme?.raw,
+            showToolbar: context.parameters.showToolbar?.raw,
+            enableSpellCheck: context.parameters.enableSpellCheck?.raw,
+            rows: context.parameters.rows?.raw,
+            maxLength: this._maxLength,
+            width: context.mode.allocatedWidth
+        });
+
+        // Only re-render if props actually changed (prevents unnecessary React re-renders)
+        if (propsSignature !== this._lastPropsSignature) {
+            this._lastPropsSignature = propsSignature;
+            this.renderComponent(context);
+        }
     }
 
     /**
@@ -117,18 +148,26 @@ export class MarkdownEditorControl implements ComponentFramework.StandardControl
      * Handles markdown content change from the editor
      */
     private handleChange(value: string): void {
+        // Mark that user has edited - this prevents external updates from overwriting
+        this._hasUserEdited = true;
         this._currentValue = value;
 
-        // Update statistics
-        const words = value.trim().split(/\s+/).filter(w => w.length > 0).length;
-        this._wordCount = words;
+        // Update statistics using regex (more efficient than split/filter)
+        const wordMatches = value.match(/\S+/g);
+        this._wordCount = wordMatches ? wordMatches.length : 0;
         this._characterCount = value.length;
 
         // Validate against max length
         this._isValid = this._characterCount <= this._maxLength;
 
-        // Notify Power Apps that the value has changed
-        this._notifyOutputChanged();
+        // Debounce notification - 50ms batches rapid keystrokes while maintaining data safety
+        if (this._notifyTimeoutId) {
+            clearTimeout(this._notifyTimeoutId);
+        }
+        this._notifyTimeoutId = setTimeout(() => {
+            this._notifyOutputChanged();
+            this._notifyTimeoutId = null;
+        }, 50);
     }
 
     /**
@@ -147,6 +186,11 @@ export class MarkdownEditorControl implements ComponentFramework.StandardControl
      * Cleanup when control is removed
      */
     public destroy(): void {
+        // Clean up debounce timeout
+        if (this._notifyTimeoutId) {
+            clearTimeout(this._notifyTimeoutId);
+            this._notifyTimeoutId = null;
+        }
         if (this._root) {
             this._root.unmount();
             this._root = null;
