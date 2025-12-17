@@ -1364,64 +1364,42 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
                 })
                 .config((ctx) => {
                     const listenerPlugin = ctx.get(listenerCtx);
-                    // Use 'updated' callback - fires immediately without serialization (FAST)
-                    // Then debounce the expensive markdown serialization ourselves
+                    // ULTRA-MINIMAL keystroke handler - do almost nothing synchronously
+                    // All expensive work is deferred to prevent ANY typing lag
                     listenerPlugin.updated((_ctx, doc) => {
-                        // Mark that we need to serialize (but don't do it yet)
-                        pendingSerializeRef.current = true;
-
-                        // Get character count directly from ProseMirror doc (INSTANT - no serialization)
-                        const charCount = doc.textContent.length;
-                        charCountRef.current = charCount;
-
-                        // Update char count in DOM immediately for responsive feedback
-                        const charEl = document.getElementById('md-char-count');
-                        if (charEl) charEl.textContent = `Characters: ${charCount} / ${maxLength}`;
-
-                        // Show unsaved status immediately (only if not already showing)
-                        if (lastSaveStatusRef.current !== 'unsaved') {
-                            lastSaveStatusRef.current = 'unsaved';
-                            setSaveStatus('unsaved');
-                        }
-
-                        // Debounce the expensive markdown serialization (300ms)
+                        // Clear existing timeout and set new one - this is the ONLY sync work
                         if (serializeTimeoutRef.current) {
                             clearTimeout(serializeTimeoutRef.current);
                         }
-                        serializeTimeoutRef.current = setTimeout(() => {
-                            if (!pendingSerializeRef.current) return;
-                            pendingSerializeRef.current = false;
 
+                        // Defer ALL work to after typing stops (150ms)
+                        serializeTimeoutRef.current = setTimeout(() => {
                             try {
-                                // Now serialize to markdown (expensive but debounced)
+                                // Serialize to markdown
                                 const serializer = ctx.get(serializerCtx);
                                 const markdown = serializer(doc);
                                 currentMarkdownRef.current = markdown;
 
-                                // Update parent with serialized markdown
+                                // Update parent
                                 onUpdate(markdown);
 
-                                // Update word count (requires the markdown string)
+                                // Update stats
+                                const charCount = doc.textContent.length;
                                 const wordMatches = markdown.match(WORD_MATCH_REGEX);
                                 const words = wordMatches ? wordMatches.length : 0;
-                                wordCountRef.current = words;
-                                const wordEl = document.getElementById('md-word-count');
-                                if (wordEl) wordEl.textContent = `Words: ${words}`;
 
-                                // Mark as saved after a short delay
-                                if (saveTimeoutRef.current) {
-                                    clearTimeout(saveTimeoutRef.current);
-                                }
-                                saveTimeoutRef.current = setTimeout(() => {
-                                    if (lastSaveStatusRef.current !== 'saved') {
-                                        lastSaveStatusRef.current = 'saved';
-                                        setSaveStatus('saved');
-                                    }
-                                }, 200);
+                                charCountRef.current = charCount;
+                                wordCountRef.current = words;
+
+                                // Direct DOM updates (no React re-render)
+                                const wordEl = document.getElementById('md-word-count');
+                                const charEl = document.getElementById('md-char-count');
+                                if (wordEl) wordEl.textContent = `Words: ${words}`;
+                                if (charEl) charEl.textContent = `Characters: ${charCount} / ${maxLength}`;
                             } catch {
-                                // Silently handle serialization errors
+                                // Silently handle errors
                             }
-                        }, 300);
+                        }, 150);
                     });
                 })
                 .use(commonmark)
