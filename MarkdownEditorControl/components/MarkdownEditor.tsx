@@ -5,7 +5,7 @@ import { commonmark } from '@milkdown/preset-commonmark';
 import { gfm } from '@milkdown/preset-gfm';
 import { nord } from '@milkdown/theme-nord';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
-import { Editor, rootCtx, defaultValueCtx, editorViewCtx, parserCtx } from '@milkdown/core';
+import { Editor, rootCtx, defaultValueCtx, editorViewCtx, parserCtx, serializerCtx } from '@milkdown/core';
 import { callCommand } from '@milkdown/kit/utils';
 import {
     toggleStrongCommand,
@@ -1291,8 +1291,9 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     const editorRef = useRef<Editor | null>(null);
     const currentMarkdownRef = useRef<string>(initialValue);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const serializeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const statsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pendingSerializeRef = useRef<boolean>(false);
     const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const rafIdRef = useRef<number | null>(null);
@@ -1321,7 +1322,7 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     useEffect(() => {
         return () => {
             if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-            if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+            if (serializeTimeoutRef.current) clearTimeout(serializeTimeoutRef.current);
             if (statsTimeoutRef.current) clearTimeout(statsTimeoutRef.current);
             if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
             if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
@@ -1363,39 +1364,64 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
                 })
                 .config((ctx) => {
                     const listenerPlugin = ctx.get(listenerCtx);
-                    listenerPlugin.markdownUpdated((_ctx, markdown) => {
-                        // Always update ref immediately (no delay)
-                        currentMarkdownRef.current = markdown;
+                    // Use 'updated' callback - fires immediately without serialization (FAST)
+                    // Then debounce the expensive markdown serialization ourselves
+                    listenerPlugin.updated((_ctx, doc) => {
+                        // Mark that we need to serialize (but don't do it yet)
+                        pendingSerializeRef.current = true;
 
-                        // Update parent immediately - no debounce to prevent data loss
-                        // The PCF framework handles its own batching
-                        onUpdate(markdown);
+                        // Get character count directly from ProseMirror doc (INSTANT - no serialization)
+                        const charCount = doc.textContent.length;
+                        charCountRef.current = charCount;
 
-                        // Debounce stats update only - 200ms delay (cosmetic only)
-                        if (statsTimeoutRef.current) {
-                            clearTimeout(statsTimeoutRef.current);
-                        }
-                        statsTimeoutRef.current = setTimeout(() => {
-                            updateStats(markdown);
-                        }, 200);
+                        // Update char count in DOM immediately for responsive feedback
+                        const charEl = document.getElementById('md-char-count');
+                        if (charEl) charEl.textContent = `Characters: ${charCount} / ${maxLength}`;
 
-                        // Optimized save status - only update state when status actually changes
-                        if (saveTimeoutRef.current) {
-                            clearTimeout(saveTimeoutRef.current);
-                        }
-
-                        // Only set to 'unsaved' if not already unsaved (avoids re-render)
+                        // Show unsaved status immediately (only if not already showing)
                         if (lastSaveStatusRef.current !== 'unsaved') {
                             lastSaveStatusRef.current = 'unsaved';
                             setSaveStatus('unsaved');
                         }
 
-                        saveTimeoutRef.current = setTimeout(() => {
-                            if (lastSaveStatusRef.current !== 'saved') {
-                                lastSaveStatusRef.current = 'saved';
-                                setSaveStatus('saved');
+                        // Debounce the expensive markdown serialization (300ms)
+                        if (serializeTimeoutRef.current) {
+                            clearTimeout(serializeTimeoutRef.current);
+                        }
+                        serializeTimeoutRef.current = setTimeout(() => {
+                            if (!pendingSerializeRef.current) return;
+                            pendingSerializeRef.current = false;
+
+                            try {
+                                // Now serialize to markdown (expensive but debounced)
+                                const serializer = ctx.get(serializerCtx);
+                                const markdown = serializer(doc);
+                                currentMarkdownRef.current = markdown;
+
+                                // Update parent with serialized markdown
+                                onUpdate(markdown);
+
+                                // Update word count (requires the markdown string)
+                                const wordMatches = markdown.match(WORD_MATCH_REGEX);
+                                const words = wordMatches ? wordMatches.length : 0;
+                                wordCountRef.current = words;
+                                const wordEl = document.getElementById('md-word-count');
+                                if (wordEl) wordEl.textContent = `Words: ${words}`;
+
+                                // Mark as saved after a short delay
+                                if (saveTimeoutRef.current) {
+                                    clearTimeout(saveTimeoutRef.current);
+                                }
+                                saveTimeoutRef.current = setTimeout(() => {
+                                    if (lastSaveStatusRef.current !== 'saved') {
+                                        lastSaveStatusRef.current = 'saved';
+                                        setSaveStatus('saved');
+                                    }
+                                }, 200);
+                            } catch {
+                                // Silently handle serialization errors
                             }
-                        }, 400);
+                        }, 300);
                     });
                 })
                 .use(commonmark)
