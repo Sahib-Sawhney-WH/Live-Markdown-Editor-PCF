@@ -5,6 +5,47 @@ All notable changes to the Markdown Editor PCF Control will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.9] - 2025-12-17
+
+### Fixed
+- **Zero-lag typing performance**: Completely eliminated typing lag by deferring all processing to after typing stops
+
+### Technical
+- Keystroke handler now only sets a timeout (~0.002ms of work)
+- All expensive operations (serialization, DOM updates, stats) happen 150ms after typing pauses
+- Removed synchronous doc traversal, DOM queries, and React state changes from keystroke path
+
+---
+
+## [1.5.7] - 2025-12-16
+
+### Added
+- **Horizontal scrolling for wide tables**: Tables wider than the container now scroll horizontally
+
+### Changed
+- Table cells use `white-space: nowrap` for predictable sizing
+- ProseMirror content area has `overflow-x: auto` for scroll support
+
+---
+
+## [1.5.6] - 2025-12-16
+
+### Added
+- **Theme toggle button**: Sun/moon icon in toolbar to switch between light and dark mode
+- **Performance optimizations**: Word/character counts use refs + direct DOM updates (no React re-renders)
+- **Improved Dataverse sync**: Better handling of external updates vs user edits
+
+### Fixed
+- **Bundle size issue**: Replaced Fluent Weather icons with inline SVGs to avoid pulling in extra icon chunks
+- **Production builds**: Must use `npm run build -- --buildMode production` for optimized output
+
+### Technical
+- Component wrapped in React.memo with custom prop comparison
+- Added `_hasUserEdited` flag to prevent external updates overwriting user content
+- Solution zip size: ~477KB (same as v1.5.5)
+
+---
+
 ## [1.5.1] - 2025-12-15
 
 ### Fixed

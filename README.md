@@ -3,7 +3,7 @@
 A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) control using React and Milkdown, featuring Microsoft Fluent 2.0 design language.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.5.1-blue.svg)
+![Version](https://img.shields.io/badge/version-1.5.9-blue.svg)
 ![PCF](https://img.shields.io/badge/PCF-1.0-green.svg)
 ![React](https://img.shields.io/badge/React-19.2.0-61dafb.svg)
 ![Milkdown](https://img.shields.io/badge/Milkdown-7.17.1-ff6188.svg)
@@ -59,11 +59,13 @@ A feature-rich Markdown editor built as a Power Apps Component Framework (PCF) c
 - **Dynamic Sizing**: Automatically adjusts to container height and width
 - **Responsive Design**: Adapts toolbar and layout for narrow widths
 - **Theme Support**: Light, Dark, Auto (system preference), and High Contrast modes
+- **Theme Toggle**: Click sun/moon icon to switch between light and dark mode
 - **Spell Check**: Configurable spell checking
 - **Read-only Mode**: Display markdown without editing capability
 - **Character/Word Count**: Live statistics in status bar
 - **Max Length Validation**: Configurable character limit with validation feedback
-- **Debounced Updates**: Optimized typing performance with batched updates
+- **Zero-lag Typing**: All processing deferred until typing stops - buttery smooth at any speed
+- **Scrollable Tables**: Wide tables scroll horizontally instead of being cut off
 
 ## Installation
 
