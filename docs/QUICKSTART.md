@@ -20,8 +20,8 @@ cd markdown_editor
 # 3. Install dependencies
 npm install
 
-# 4. Build the control
-npm run build
+# 4. Build the control (use production mode for deployment)
+npm run build -- --buildMode production
 ```
 
 ## Local Development
@@ -135,7 +135,7 @@ Max Length: 50,000
 - **Links**: Insert with custom display text
 - **Images**: Paste from clipboard (Ctrl+V)
 - **Export**: HTML and PDF (text or image)
-- **Templates**: 5 pre-built templates
+- **Templates**: 20+ pre-built templates
 - **Find & Replace**: Search and replace text
 
 ## Troubleshooting
@@ -156,8 +156,8 @@ Max Length: 50,000
 - Try simple markdown first (# Heading)
 
 ### "Slow typing"
-- Control uses debouncing (150ms) for performance
-- For very large documents, consider smaller max length
+- v1.5.9+ has zero-lag typing (all processing deferred until typing stops)
+- If still slow, check browser extensions or try incognito mode
 
 ## Next Steps
 
@@ -184,4 +184,4 @@ Max Length: 50,000
 
 **You're all set!** Start editing markdown in your Power Apps forms.
 
-Version: 1.3.0
+Version: 1.5.9

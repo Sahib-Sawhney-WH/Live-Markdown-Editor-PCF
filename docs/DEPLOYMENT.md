@@ -19,8 +19,8 @@ The fastest way to deploy for testing:
 # Navigate to the control directory
 cd markdown_editor
 
-# Build the control
-npm run build
+# Build the control (IMPORTANT: use production mode!)
+npm run build -- --buildMode production
 
 # Push to your environment
 pac pcf push --publisher-prefix dev
@@ -130,8 +130,8 @@ Create a simple table to test the control:
 
 ```bash
 # Make your changes
-# Rebuild
-npm run build
+# Rebuild (always use production mode!)
+npm run build -- --buildMode production
 
 # Push update
 pac pcf push --publisher-prefix dev
@@ -214,10 +214,11 @@ Forms using the control will automatically use the new version after refresh.
 
 ## Performance Tips
 
-1. **Bundle size:** Current ~4.5 MiB is acceptable for most networks
-2. **Lazy loading:** Control only loads when form opens
-3. **Caching:** Browser caches the bundle after first load
-4. **CDN:** Consider hosting static assets on CDN for global deployments
+1. **Bundle size:** Production build is ~1.5 MiB, solution zip is ~477KB
+2. **IMPORTANT:** Always use `--buildMode production` for deployments (dev builds are ~7 MiB!)
+3. **Lazy loading:** Control only loads when form opens
+4. **Caching:** Browser caches the bundle after first load
+5. **Zero-lag typing:** v1.5.9+ defers all processing until typing stops
 
 ## Rollback Procedure
 
