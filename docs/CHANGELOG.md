@@ -5,6 +5,32 @@ All notable changes to the Markdown Editor PCF Control will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2025-12-30
+
+### Changed
+- **Major Code Architecture Refactor**: Restructured codebase for improved maintainability
+- Main component (`MarkdownEditor.tsx`) reduced from ~2,100 lines to 1,355 lines (36% reduction)
+- Extracted reusable React hooks for better separation of concerns
+
+### Added
+- **Custom Hooks Architecture**:
+  - `useEditorCommands` - Formatting commands (bold, italic, headings, lists, etc.)
+  - `useTableOperations` - Table CRUD operations (add/delete rows/columns)
+  - `useFindReplace` - Find/replace with highlighting and keyboard shortcuts
+- **Shared Types Module** (`types/editor.types.ts`) - Centralized TypeScript interfaces
+- **Lazy PDF Export** - PDF libraries loaded on-demand to improve initial load time
+- **Templates Module** - Template definitions moved to dedicated file
+
+### Technical
+- Removed unused dependencies: @fluentui/react (247 MB savings in node_modules)
+- Moved @types/* to devDependencies (build-time only)
+- Added `sideEffects: ["*.css"]` for better tree-shaking
+- Removed ~20 unused CSS design tokens
+- Production bundle: 1.49 MiB (minified)
+- Solution zip: ~478 KB
+
+---
+
 ## [1.5.9] - 2025-12-17
 
 ### Fixed
@@ -278,6 +304,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Highlights |
 |---------|------|------------|
+| 1.6.0 | 2025-12-30 | Major code refactor, custom hooks, lazy PDF loading, 36% smaller main component |
+| 1.5.9 | 2025-12-17 | Zero-lag typing performance |
+| 1.5.7 | 2025-12-16 | Horizontal scrolling for wide tables |
+| 1.5.6 | 2025-12-16 | Theme toggle button, performance optimizations |
 | 1.5.1 | 2025-12-15 | Fixed editor not loading Dataverse content on first open |
 | 1.5.0 | 2025-12-15 | Fluent 2.0 visual redesign, Fluent UI icons, glassmorphism, enhanced UX |
 | 1.4.3 | 2025-12-11 | Fixed rows height calculation to match standard textarea |
@@ -291,6 +321,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.6.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.6.0
+[1.5.9]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.5.9
+[1.5.7]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.5.7
+[1.5.6]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.5.6
 [1.5.1]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.5.1
 [1.5.0]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.5.0
 [1.4.3]: https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/releases/tag/v1.4.3

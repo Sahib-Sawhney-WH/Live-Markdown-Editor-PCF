@@ -10,7 +10,7 @@
     <Descriptions>
       <Description description="A feature-rich WYSIWYG Markdown editor PCF control with Fluent 2.0 design, GitHub Flavored Markdown support, and Dataverse integration." languagecode="1033" />
     </Descriptions>
-    <Version>1.5.9</Version>
+    <Version>1.6.0</Version>
     <!-- Solution Package Type: Unmanaged(0)/Managed(1)/Both(2)-->
     <Managed>2</Managed>
     <Publisher>

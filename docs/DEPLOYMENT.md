@@ -214,7 +214,7 @@ Forms using the control will automatically use the new version after refresh.
 
 ## Performance Tips
 
-1. **Bundle size:** Production build is ~1.5 MiB, solution zip is ~477KB
+1. **Bundle size:** Production build is ~1.49 MiB, solution zip is ~478KB
 2. **IMPORTANT:** Always use `--buildMode production` for deployments (dev builds are ~7 MiB!)
 3. **Lazy loading:** Control only loads when form opens
 4. **Caching:** Browser caches the bundle after first load

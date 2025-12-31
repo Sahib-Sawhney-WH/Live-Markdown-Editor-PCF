@@ -184,4 +184,4 @@ Max Length: 50,000
 
 **You're all set!** Start editing markdown in your Power Apps forms.
 
-Version: 1.5.9
+Version: 1.6.0

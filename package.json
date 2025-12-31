@@ -1,6 +1,6 @@
 {
   "name": "markdown-editor-pcf",
-  "version": "1.5.9",
+  "version": "1.6.0",
   "description": "A feature-rich Markdown editor PCF control with GitHub Flavored Markdown support, built using React and Milkdown for Power Apps.",
   "keywords": [
     "powerapps",
@@ -24,7 +24,9 @@
     "url": "https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF/issues"
   },
   "homepage": "https://github.com/Sahib-Sawhney-WH/Live-Markdown-Editor-PCF#readme",
-  "sideEffects": ["*.css"],
+  "sideEffects": [
+    "*.css"
+  ],
   "scripts": {
     "build": "pcf-scripts build",
     "clean": "pcf-scripts clean",
