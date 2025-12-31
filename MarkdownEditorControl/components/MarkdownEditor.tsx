@@ -6,28 +6,16 @@ import { gfm } from '@milkdown/preset-gfm';
 import { nord } from '@milkdown/theme-nord';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { Editor, rootCtx, defaultValueCtx, editorViewCtx, parserCtx, serializerCtx } from '@milkdown/core';
-import { callCommand } from '@milkdown/kit/utils';
-import {
-    toggleStrongCommand,
-    toggleEmphasisCommand,
-    wrapInHeadingCommand,
-    wrapInBulletListCommand,
-    wrapInOrderedListCommand,
-    insertImageCommand,
-    wrapInBlockquoteCommand,
-    insertHrCommand
-} from '@milkdown/preset-commonmark';
-import { insertTableCommand, toggleStrikethroughCommand } from '@milkdown/preset-gfm';
-import { redoCommand, undoCommand } from '@milkdown/plugin-history';
+import { insertImageCommand } from '@milkdown/preset-commonmark';
 import { history } from '@milkdown/plugin-history';
 import '@milkdown/theme-nord/style.css';
 // PDF libraries lazy-loaded on demand from utils/exportPdf.ts
-import { TextSelection } from '@milkdown/prose/state';
-import { Decoration, DecorationSet } from '@milkdown/prose/view';
-import { Node as ProseMirrorNode } from '@milkdown/prose/model';
 
 // Import templates from separate module
 import { MARKDOWN_TEMPLATES } from '../utils/templates';
+
+// Import custom hooks
+import { useEditorCommands, useTableOperations, useFindReplace } from '../hooks';
 
 // Fluent UI Icons
 import {
@@ -115,10 +103,6 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     const [editorError, setEditorError] = useState<string | null>(null);
     const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
-    const [showFindReplace, setShowFindReplace] = useState(false);
-    const [findText, setFindText] = useState('');
-    const [replaceText, setReplaceText] = useState('');
-    const [findResults, setFindResults] = useState<{ count: number; current: number }>({ count: 0, current: 0 });
     const [showTemplates, setShowTemplates] = useState(false);
     const [showTablePicker, setShowTablePicker] = useState(false);
     const [tableSize, setTableSize] = useState<{ rows: number; cols: number }>({ rows: 3, cols: 3 });
@@ -130,13 +114,9 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
     const serializeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const statsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const pendingSerializeRef = useRef<boolean>(false);
-    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const rafIdRef = useRef<number | null>(null);
-    const findInputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const showFindReplaceRef = useRef(showFindReplace); // Track state in ref for keyboard listener
-    const findDataRef = useRef<{ positions: number[]; searchLength: number }>({ positions: [], searchLength: 0 });
     const getEditorRef = useRef<(() => Editor | undefined) | undefined>(undefined);
     const lastSaveStatusRef = useRef<SaveStatus>('saved');
 
@@ -160,16 +140,10 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
             if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
             if (serializeTimeoutRef.current) clearTimeout(serializeTimeoutRef.current);
             if (statsTimeoutRef.current) clearTimeout(statsTimeoutRef.current);
-            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
             if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
             if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
         };
     }, []);
-
-    // Keep showFindReplaceRef in sync with state (for keyboard listener)
-    useEffect(() => {
-        showFindReplaceRef.current = showFindReplace;
-    }, [showFindReplace]);
 
     // Calculate statistics (optimized - uses refs + direct DOM updates to avoid re-renders)
     const updateStats = useCallback((text: string) => {
@@ -261,6 +235,25 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
         getEditorRef.current = get;
     }, [get]);
 
+    // Stable getEditor function for hooks
+    const getEditor = useCallback(() => get?.(), [get]);
+
+    // Use extracted hooks for editor commands
+    const editorCommands = useEditorCommands({ getEditor });
+
+    // Use extracted hooks for table operations
+    const tableOperations = useTableOperations({
+        getEditor,
+        onComplete: () => setShowTablePicker(false)
+    });
+
+    // Use extracted hooks for find/replace
+    const findReplaceActions = useFindReplace({
+        getEditor,
+        currentMarkdown: currentMarkdownRef,
+        containerRef
+    });
+
     // Sync editor content when initialValue prop changes (handles late-arriving Dataverse data)
     // Only updates if editor is empty and new value has content
     useEffect(() => {
@@ -307,103 +300,16 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
         }
     }, []);
 
-    // Toolbar actions - simplified with error handling
-    const executeCommand = useCallback((command: Parameters<typeof callCommand>[0], payload?: unknown) => {
-        if (!get) return;
-        try {
-            get()?.action(callCommand(command, payload));
-        } catch {
-            // Silently handle command errors
-        }
-    }, [get]);
+    // Destructure commands from hook for cleaner JSX usage
+    const {
+        insertHeading, clearHeading, toggleBold, toggleItalic, toggleStrikethrough,
+        handleUndo, handleRedo, insertBlockquote, insertHorizontalRule,
+        insertBulletList, insertOrderedList, insertLink, insertImage, insertCode,
+        insertTable: insertTableCommand_fn, executeCommand
+    } = editorCommands;
 
-    const insertHeading = (level: number) => executeCommand(wrapInHeadingCommand.key, level);
-    const clearHeading = () => executeCommand(wrapInHeadingCommand.key, 0);
-    const toggleBold = () => executeCommand(toggleStrongCommand.key);
-    const toggleItalic = () => executeCommand(toggleEmphasisCommand.key);
-    const handleUndo = () => executeCommand(undoCommand.key);
-    const handleRedo = () => executeCommand(redoCommand.key);
-    const insertBlockquote = () => executeCommand(wrapInBlockquoteCommand.key);
-    const insertHorizontalRule = () => executeCommand(insertHrCommand.key);
-    const toggleStrikethrough = () => executeCommand(toggleStrikethroughCommand.key);
-    const insertBulletList = () => executeCommand(wrapInBulletListCommand.key);
-    const insertOrderedList = () => executeCommand(wrapInOrderedListCommand.key);
-
-    const insertLink = () => {
-        if (!get) return;
-
-        try {
-            const view = get()?.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            const { state, dispatch } = view;
-            const { selection } = state;
-            const selectedText = state.doc.textBetween(selection.from, selection.to);
-
-            // Ask for URL
-            const url = window.prompt('Enter URL:', 'https://');
-            if (!url) return;
-
-            // Ask for link text (pre-fill with selected text or URL)
-            const defaultText = selectedText || url;
-            const linkText = window.prompt('Enter link text (or leave empty to show URL):', defaultText);
-            if (linkText === null) return; // User cancelled
-
-            const displayText = linkText.trim() || url;
-
-            // Use ProseMirror's link mark for proper rendering
-            const linkMark = state.schema.marks.link;
-            if (linkMark) {
-                const mark = linkMark.create({ href: url, title: '' });
-                const textNode = state.schema.text(displayText, [mark]);
-
-                let tr;
-                if (selectedText) {
-                    // Replace selected text with linked version
-                    tr = state.tr.replaceSelectionWith(textNode, false);
-                } else {
-                    // Insert new link at cursor
-                    tr = state.tr.replaceSelectionWith(textNode, false);
-                }
-                dispatch(tr);
-
-                // Focus back on editor
-                view.focus();
-            }
-        } catch {
-            // Silently handle errors
-        }
-    };
-
-    const insertImage = () => {
-        if (!get) return;
-        const url = window.prompt('Enter image URL:', 'https://');
-        if (!url) return;
-        const alt = window.prompt('Enter alt text:', 'image') || 'image';
-        executeCommand(insertImageCommand.key, { src: url, alt });
-    };
-
-    const insertCode = () => {
-        if (!get) return;
-        try {
-            const view = get()?.ctx.get(editorViewCtx);
-            if (view) {
-                const { state, dispatch } = view;
-                const codeBlockType = state.schema.nodes.code_block;
-                if (codeBlockType) {
-                    // Create a proper code block node with placeholder text
-                    const codeBlock = codeBlockType.create(
-                        { language: '' },
-                        state.schema.text('// code here')
-                    );
-                    const tr = state.tr.replaceSelectionWith(codeBlock);
-                    dispatch(tr);
-                }
-            }
-        } catch {
-            // Silently handle errors
-        }
-    };
+    // Destructure table operations from hook
+    const { addTableRow, addTableColumn, deleteTableRow, deleteTableColumn, deleteTable } = tableOperations;
 
     // Toggle table picker visibility
     const toggleTablePicker = () => {
@@ -413,347 +319,9 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
 
     // Insert table with specified dimensions (minimum 2 rows to have header + data)
     const insertTableWithSize = (rows: number, cols: number) => {
-        if (!get) return;
-        // Enforce minimum 2 rows (1 header + 1 data row)
-        const actualRows = Math.max(2, rows);
-        if (actualRows > 0 && cols > 0) {
-            executeCommand(insertTableCommand.key, { row: actualRows, col: cols });
-        }
+        insertTableCommand_fn(rows, cols);
         setShowTablePicker(false);
         setHoveredCell({ row: 0, col: 0 });
-    };
-
-    // Helper to create an empty cell with proper content structure
-    const createEmptyCell = (state: { schema: { nodes: Record<string, { create: (attrs: null, content?: ProseMirrorNode | ProseMirrorNode[]) => ProseMirrorNode } | undefined> } }, cellTypeName: string): ProseMirrorNode | null => {
-        const cellType = state.schema.nodes[cellTypeName];
-        const paragraphType = state.schema.nodes.paragraph;
-        if (!cellType) return null;
-
-        // Create cell with empty paragraph inside (required structure for table cells)
-        if (paragraphType) {
-            const emptyParagraph = paragraphType.create(null);
-            return cellType.create(null, emptyParagraph);
-        }
-        return cellType.create(null);
-    };
-
-    // Add row to existing table at cursor position
-    const addTableRow = () => {
-        if (!get) return;
-        try {
-            const editor = get();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            const { state, dispatch } = view;
-            const { selection } = state;
-            const $from = selection.$from;
-
-            // Find table position by walking up the document tree
-            let tableDepth = -1;
-            let tableNode: ProseMirrorNode | null = null;
-            let rowIndex = -1;
-
-            for (let depth = $from.depth; depth >= 0; depth--) {
-                const node = $from.node(depth);
-                if (node.type.name === 'table') {
-                    tableDepth = depth;
-                    tableNode = node;
-                    // Find which row we're in
-                    for (let d = $from.depth; d > depth; d--) {
-                        const n = $from.node(d);
-                        if (n.type.name === 'table_row') {
-                            rowIndex = $from.index(d - 1);
-                            break;
-                        }
-                    }
-                    break;
-                }
-            }
-
-            if (tableDepth === -1 || !tableNode || rowIndex === -1) {
-                alert('Place your cursor inside a table to add a row.');
-                return;
-            }
-
-            // Get the number of columns from the first row
-            const firstRow = tableNode.firstChild;
-            if (!firstRow) return;
-            const numCols = firstRow.childCount;
-
-            // Create new row with empty cells
-            const cells: ProseMirrorNode[] = [];
-            for (let i = 0; i < numCols; i++) {
-                const newCell = createEmptyCell(state, 'table_cell');
-                if (newCell) cells.push(newCell);
-            }
-
-            if (cells.length === 0) return;
-
-            const tableRowType = state.schema.nodes.table_row;
-            if (!tableRowType) return;
-
-            const newRow = tableRowType.create(null, cells);
-
-            // Insert after current row
-            const tableStart = $from.before(tableDepth);
-            let insertPos = tableStart + 1; // Start after table open tag
-
-            // Calculate position after the target row
-            for (let i = 0; i <= rowIndex; i++) {
-                const row = tableNode.child(i);
-                insertPos += row.nodeSize;
-            }
-
-            const tr = state.tr.insert(insertPos, newRow);
-            dispatch(tr);
-            setShowTablePicker(false);
-        } catch (e) {
-            console.error('Error adding row:', e);
-        }
-    };
-
-    // Add column to existing table
-    const addTableColumn = () => {
-        if (!get) return;
-        try {
-            const editor = get();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            const { state, dispatch } = view;
-            const { selection } = state;
-            const $from = selection.$from;
-
-            // Find table and current column
-            let tableDepth = -1;
-            let tableNode: ProseMirrorNode | null = null;
-            let colIndex = 0;
-
-            for (let depth = $from.depth; depth >= 0; depth--) {
-                const node = $from.node(depth);
-                if (node.type.name === 'table') {
-                    tableDepth = depth;
-                    tableNode = node;
-                    break;
-                }
-                if (node.type.name === 'table_cell' || node.type.name === 'table_header') {
-                    // Get the index within the row
-                    colIndex = $from.index(depth - 1);
-                }
-            }
-
-            if (tableDepth === -1 || !tableNode) {
-                alert('Place your cursor inside a table to add a column.');
-                return;
-            }
-
-            const tableStart = $from.before(tableDepth);
-            const tableRowType = state.schema.nodes.table_row;
-            const tableType = state.schema.nodes.table;
-            if (!tableRowType || !tableType) return;
-
-            // Build new table with extra column
-            const newRows: ProseMirrorNode[] = [];
-            let isFirstRow = true;
-
-            tableNode.forEach((row) => {
-                const newCells: ProseMirrorNode[] = [];
-                let cellIdx = 0;
-
-                row.forEach((cell) => {
-                    // Copy existing cell
-                    newCells.push(cell.copy(cell.content));
-
-                    // Insert new cell after current column
-                    if (cellIdx === colIndex) {
-                        const cellTypeName = isFirstRow ? 'table_header' : 'table_cell';
-                        // Try table_header first, fall back to table_cell if not available
-                        let newCell = createEmptyCell(state, cellTypeName);
-                        if (!newCell) {
-                            newCell = createEmptyCell(state, 'table_cell');
-                        }
-                        if (newCell) newCells.push(newCell);
-                    }
-                    cellIdx++;
-                });
-
-                const newRow = tableRowType.create(null, newCells);
-                newRows.push(newRow);
-                isFirstRow = false;
-            });
-
-            const newTable = tableType.create(tableNode.attrs, newRows);
-            const tableEnd = $from.after(tableDepth);
-            const tr = state.tr.replaceWith(tableStart, tableEnd, newTable);
-            dispatch(tr);
-            setShowTablePicker(false);
-        } catch (e) {
-            console.error('Error adding column:', e);
-        }
-    };
-
-    // Delete current row from table
-    const deleteTableRow = () => {
-        if (!get) return;
-        try {
-            const editor = get();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            const { state, dispatch } = view;
-            const { selection } = state;
-            const $from = selection.$from;
-
-            // Find the table to check row count
-            let tableNode: ProseMirrorNode | null = null;
-            for (let depth = $from.depth; depth >= 0; depth--) {
-                const node = $from.node(depth);
-                if (node.type.name === 'table') {
-                    tableNode = node;
-                    break;
-                }
-            }
-
-            // Check if deleting would leave only header row (need at least 2 rows)
-            if (tableNode && tableNode.childCount <= 2) {
-                alert('Cannot delete row - tables need at least 2 rows (header + data). Delete the table instead.');
-                setShowTablePicker(false);
-                return;
-            }
-
-            for (let depth = $from.depth; depth >= 0; depth--) {
-                const node = $from.node(depth);
-                if (node.type.name === 'table_row') {
-                    const start = $from.before(depth);
-                    const end = $from.after(depth);
-                    const tr = state.tr.delete(start, end);
-                    dispatch(tr);
-                    setShowTablePicker(false);
-                    return;
-                }
-            }
-            alert('Place your cursor inside a table row to delete it.');
-        } catch (e) {
-            console.error('Error deleting row:', e);
-        }
-        setShowTablePicker(false);
-    };
-
-    // Delete current column from table
-    const deleteTableColumn = () => {
-        if (!get) return;
-        try {
-            const editor = get();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            const { state, dispatch } = view;
-            const { selection } = state;
-            const $from = selection.$from;
-
-            // Find the table and current column index
-            let tableDepth = -1;
-            let tableNode: ProseMirrorNode | null = null;
-            let currentColIndex = 0;
-
-            for (let depth = $from.depth; depth >= 0; depth--) {
-                const node = $from.node(depth);
-                if (node.type.name === 'table') {
-                    tableDepth = depth;
-                    tableNode = node;
-                    break;
-                }
-                if (node.type.name === 'table_cell' || node.type.name === 'table_header') {
-                    currentColIndex = $from.index(depth - 1);
-                }
-            }
-
-            if (tableDepth === -1 || !tableNode) {
-                alert('Place your cursor inside a table to delete a column.');
-                setShowTablePicker(false);
-                return;
-            }
-
-            const tableStart = $from.before(tableDepth);
-
-            // Check if table would be empty
-            const firstRow = tableNode.firstChild;
-            if (firstRow && firstRow.childCount <= 1) {
-                alert('Cannot delete the last column. Delete the table instead.');
-                setShowTablePicker(false);
-                return;
-            }
-
-            const tableRowType = state.schema.nodes.table_row;
-            const tableType = state.schema.nodes.table;
-            if (!tableRowType || !tableType) return;
-
-            // Build new table without the column
-            const newRows: ProseMirrorNode[] = [];
-            tableNode.forEach((row) => {
-                const newCells: ProseMirrorNode[] = [];
-                let cellIdx = 0;
-                row.forEach((cell) => {
-                    if (cellIdx !== currentColIndex) {
-                        newCells.push(cell.copy(cell.content));
-                    }
-                    cellIdx++;
-                });
-                const newRow = tableRowType.create(null, newCells);
-                newRows.push(newRow);
-            });
-
-            const newTable = tableType.create(tableNode.attrs, newRows);
-            const tableEnd = $from.after(tableDepth);
-            const tr = state.tr.replaceWith(tableStart, tableEnd, newTable);
-            dispatch(tr);
-            setShowTablePicker(false);
-        } catch (e) {
-            console.error('Error deleting column:', e);
-        }
-    };
-
-    const deleteTable = () => {
-        if (!get) return;
-        try {
-            const editor = get();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            const { state, dispatch } = view;
-            const { selection } = state;
-            const pos = selection.$from;
-
-            // Walk up from current position to find a table node
-            for (let depth = pos.depth; depth >= 0; depth--) {
-                const node = pos.node(depth);
-                if (node.type.name === 'table') {
-                    // Found a table - delete it
-                    const start = pos.before(depth);
-                    const end = pos.after(depth);
-                    const tr = state.tr.delete(start, end);
-                    dispatch(tr);
-                    setShowTablePicker(false);
-                    return;
-                }
-            }
-            // No table found at cursor position
-            alert('Place your cursor inside a table to delete it.');
-        } catch (e) {
-            console.error('Error deleting table:', e);
-        }
-        setShowTablePicker(false);
     };
 
     const copyToClipboard = async () => {
@@ -766,341 +334,17 @@ const EditorComponent: React.FC<Omit<MarkdownEditorProps, 'value' | 'onChange'> 
         }
     };
 
-    // Find & Replace functions
-    const toggleFindReplace = () => {
-        const willShow = !showFindReplace;
-        setShowFindReplace(willShow);
-        if (willShow) {
-            scheduleFocus(findInputRef.current, 100);
-        } else {
-            // Clear highlights when closing the panel
-            clearSearchHighlights();
-        }
-    };
-
-    // Apply highlight decorations to all matches
-    const applySearchHighlights = useCallback((positions: number[], searchLength: number, currentIndex: number) => {
-        const currentGet = getEditorRef.current;
-        if (!currentGet) return;
-
-        try {
-            const editor = currentGet();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            // Create decorations for all matches
-            const decorations: Decoration[] = [];
-            positions.forEach((pos, idx) => {
-                const from = pos;
-                const to = pos + searchLength;
-                // Current match gets a different class
-                const className = idx === currentIndex ? 'search-highlight-current' : 'search-highlight';
-                decorations.push(
-                    Decoration.inline(from, to, { class: className })
-                );
-            });
-
-            // Create decoration set and apply via setProps
-            const decorationSet = decorations.length > 0
-                ? DecorationSet.create(view.state.doc, decorations)
-                : DecorationSet.empty;
-
-            // Apply decorations to the view
-            view.setProps({
-                decorations: () => decorationSet
-            });
-        } catch {
-            // Silently handle errors
-        }
-    }, []);
-
-    // Clear all search highlights
-    const clearSearchHighlights = useCallback(() => {
-        const currentGet = getEditorRef.current;
-        if (!currentGet) return;
-
-        try {
-            const editor = currentGet();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            view.setProps({
-                decorations: () => DecorationSet.empty
-            });
-        } catch {
-            // Silently handle errors
-        }
-    }, []);
-
-    // Select and highlight a match in the editor (defined before handleFind to avoid hoisting issues)
-    const selectMatchAtIndex = useCallback((index: number) => {
-        const { positions, searchLength } = findDataRef.current;
-        if (positions.length === 0 || index < 0 || index >= positions.length) return;
-
-        const currentGet = getEditorRef.current;
-        if (!currentGet) return;
-
-        try {
-            const editor = currentGet();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            const { state, dispatch } = view;
-            const from = positions[index];
-            const to = from + searchLength; // Use stored length, not current findText.length
-
-            // Update highlights to show current match differently
-            applySearchHighlights(positions, searchLength, index);
-
-            // Create a selection at the match position
-            const selection = TextSelection.create(state.doc, from, to);
-            const tr = state.tr.setSelection(selection);
-            dispatch(tr);
-
-            // Scroll to match if needed (instant, no animation to prevent shake)
-            try {
-                const wrapper = containerRef.current?.querySelector('.markdown-editor-wrapper') as HTMLElement;
-                if (wrapper) {
-                    const coords = view.coordsAtPos(from);
-                    if (coords) {
-                        const wrapperRect = wrapper.getBoundingClientRect();
-                        const relativeTop = coords.top - wrapperRect.top;
-                        const wrapperHeight = wrapper.clientHeight;
-
-                        // Check if the match is outside the visible area
-                        if (relativeTop < 0 || relativeTop > wrapperHeight - 50) {
-                            // Instant scroll to center the match
-                            wrapper.scrollTop = wrapper.scrollTop + relativeTop - wrapperHeight / 2;
-                        }
-                    }
-                }
-            } catch {
-                // Silently handle scroll errors
-            }
-        } catch {
-            // Silently handle errors
-        }
-    }, [applySearchHighlights]);
-
-    const handleFind = useCallback((autoSelect = false) => {
-        if (!findText) {
-            findDataRef.current = { positions: [], searchLength: 0 };
-            setFindResults({ count: 0, current: 0 });
-            clearSearchHighlights();
-            return;
-        }
-
-        const currentGet = getEditorRef.current;
-        if (!currentGet) return;
-
-        try {
-            const editor = currentGet();
-            if (!editor) return;
-
-            const view = editor.ctx.get(editorViewCtx);
-            if (!view) return;
-
-            const { state } = view;
-            const searchText = findText.toLowerCase();
-            const positions: number[] = [];
-
-            // Search through the document
-            state.doc.descendants((node, pos) => {
-                if (node.isText && node.text) {
-                    const text = node.text.toLowerCase();
-                    let index = 0;
-                    while ((index = text.indexOf(searchText, index)) !== -1) {
-                        positions.push(pos + index);
-                        index += 1;
-                    }
-                }
-            });
-
-            // Store positions and search length in ref for navigation functions
-            findDataRef.current = { positions, searchLength: findText.length };
-            setFindResults({
-                count: positions.length,
-                current: positions.length > 0 ? 1 : 0
-            });
-
-            // Apply highlights to all matches (first match is current by default)
-            if (positions.length > 0) {
-                applySearchHighlights(positions, findText.length, 0);
-            } else {
-                clearSearchHighlights();
-            }
-
-            // Only select match if explicitly requested (e.g., pressing Enter)
-            if (autoSelect && positions.length > 0) {
-                selectMatchAtIndex(0);
-            }
-        } catch {
-            // Fallback to simple text search
-            const content = currentMarkdownRef.current;
-            const regex = new RegExp(findText.replace(ESCAPE_REGEX, '\\$&'), 'gi');
-            const matches = content.match(regex);
-            findDataRef.current = { positions: [], searchLength: findText.length };
-            setFindResults({ count: matches?.length || 0, current: matches?.length ? 1 : 0 });
-            clearSearchHighlights();
-        }
-    }, [findText, selectMatchAtIndex, applySearchHighlights, clearSearchHighlights]);
-
-    // Navigate to next match
-    const findNext = useCallback(() => {
-        // If search hasn't run yet but we have text, run it now
-        if (findDataRef.current.positions.length === 0 && findText) {
-            handleFind(true); // true = auto-select first match
-            return;
-        }
-
-        const { positions } = findDataRef.current;
-        if (positions.length === 0) return;
-
-        setFindResults(prev => {
-            if (prev.count === 0) return prev;
-
-            // Calculate next index (1-based for display)
-            const nextIndex = prev.current >= prev.count ? 1 : prev.current + 1;
-
-            // Use requestAnimationFrame for better timing
-            requestAnimationFrame(() => selectMatchAtIndex(nextIndex - 1));
-
-            return { ...prev, current: nextIndex };
-        });
-    }, [selectMatchAtIndex, findText, handleFind]);
-
-    // Navigate to previous match
-    const findPrevious = useCallback(() => {
-        // If search hasn't run yet but we have text, run it now
-        if (findDataRef.current.positions.length === 0 && findText) {
-            handleFind(true); // true = auto-select first match
-            return;
-        }
-
-        const { positions } = findDataRef.current;
-        if (positions.length === 0) return;
-
-        setFindResults(prev => {
-            if (prev.count === 0) return prev;
-
-            // Calculate previous index (1-based for display)
-            const prevIndex = prev.current <= 1 ? prev.count : prev.current - 1;
-
-            // Use requestAnimationFrame for better timing
-            requestAnimationFrame(() => selectMatchAtIndex(prevIndex - 1));
-
-            return { ...prev, current: prevIndex };
-        });
-    }, [selectMatchAtIndex, findText, handleFind]);
-
-    const handleReplace = () => {
-        const currentGet = getEditorRef.current;
-        if (!findText || !currentGet) return;
-
-        try {
-            const editor = currentGet();
-            if (!editor) return;
-
-            const content = currentMarkdownRef.current;
-            const newContent = content.replace(findText, replaceText);
-
-            if (newContent !== content) {
-                const view = editor.ctx.get(editorViewCtx);
-                const parser = editor.ctx.get(parserCtx);
-
-                if (view && parser) {
-                    // Parse the new markdown content to preserve formatting
-                    const newDoc = parser(newContent);
-                    if (newDoc) {
-                        const { state, dispatch } = view;
-                        const tr = state.tr.replaceWith(0, state.doc.content.size, newDoc.content);
-                        dispatch(tr);
-                    }
-                }
-
-                handleFind();
-            }
-        } catch {
-            // Silently handle errors
-        }
-    };
-
-    const handleReplaceAll = () => {
-        const currentGet = getEditorRef.current;
-        if (!findText || !currentGet) return;
-
-        try {
-            const editor = currentGet();
-            if (!editor) return;
-
-            const content = currentMarkdownRef.current;
-            const regex = new RegExp(findText.replace(ESCAPE_REGEX, '\\$&'), 'g');
-            const newContent = content.replace(regex, replaceText);
-
-            if (newContent !== content) {
-                const view = editor.ctx.get(editorViewCtx);
-                const parser = editor.ctx.get(parserCtx);
-
-                if (view && parser) {
-                    // Parse the new markdown content to preserve formatting
-                    const newDoc = parser(newContent);
-                    if (newDoc) {
-                        const { state, dispatch } = view;
-                        const tr = state.tr.replaceWith(0, state.doc.content.size, newDoc.content);
-                        dispatch(tr);
-                    }
-                }
-
-                findDataRef.current = { positions: [], searchLength: 0 };
-                setFindResults({ count: 0, current: 0 });
-                clearSearchHighlights();
-            }
-        } catch {
-            // Silently handle errors
-        }
-    };
-
-    // Keyboard shortcuts - uses ref to avoid re-registering on state changes
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.ctrlKey && e.key === 'f') {
-                e.preventDefault();
-                toggleFindReplace();
-            }
-            // Use ref to check state without causing effect re-registration
-            if (e.key === 'Escape' && showFindReplaceRef.current) {
-                setShowFindReplace(false);
-                clearSearchHighlights();
-            }
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, []); // Empty deps - registers once, uses refs for state checks
-
-    // Debounced search - 100ms delay for balanced performance
-    useEffect(() => {
-        if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-
-        if (!findText) {
-            findDataRef.current = { positions: [], searchLength: 0 };
-            setFindResults({ count: 0, current: 0 });
-            return;
-        }
-
-        searchTimeoutRef.current = setTimeout(() => {
-            handleFind(false);
-        }, 100);
-
-        return () => {
-            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-        };
-    }, [findText, handleFind]);
+    // Destructure find/replace from hook
+    const {
+        isOpen: showFindReplace,
+        findText, replaceText, results: findResults,
+        findInputRef,
+        setFindText, setReplaceText,
+        toggle: toggleFindReplace,
+        close: closeFindReplace,
+        findNext, findPrevious,
+        handleReplace, handleReplaceAll
+    } = findReplaceActions;
 
     // Export to HTML
     const exportToHtml = () => {
@@ -2014,7 +1258,7 @@ ${html}
                             Replace All
                         </button>
                     </div>
-                    <button className="find-close" onClick={() => { setShowFindReplace(false); clearSearchHighlights(); }}>
+                    <button className="find-close" onClick={closeFindReplace}>
                         <DismissRegular />
                     </button>
                 </div>

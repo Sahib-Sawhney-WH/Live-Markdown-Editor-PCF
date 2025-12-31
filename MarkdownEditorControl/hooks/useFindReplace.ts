@@ -9,7 +9,7 @@ const ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
 export interface UseFindReplaceProps {
     getEditor: () => Editor | undefined;
     currentMarkdown: React.MutableRefObject<string>;
-    containerRef: React.RefObject<HTMLDivElement>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export interface FindReplaceActions {
