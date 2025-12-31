@@ -43,10 +43,7 @@
     --fluent-spacing-m: 12px;
     --fluent-spacing-l: 16px;
     --fluent-spacing-xl: 20px;
-    --fluent-spacing-xxl: 24px;
-
     /* === Border Radius Tokens === */
-    --fluent-radius-none: 0;
     --fluent-radius-small: 4px;
     --fluent-radius-medium: 6px;
     --fluent-radius-large: 8px;
@@ -57,9 +54,7 @@
     --fluent-shadow-2: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
     --fluent-shadow-4: 0 2px 6px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.12);
     --fluent-shadow-8: 0 4px 12px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.12);
-    --fluent-shadow-16: 0 8px 24px rgba(0, 0, 0, 0.20), 0 4px 8px rgba(0, 0, 0, 0.14);
     --fluent-shadow-28: 0 14px 42px rgba(0, 0, 0, 0.25), 0 6px 12px rgba(0, 0, 0, 0.15);
-    --fluent-shadow-64: 0 32px 64px rgba(0, 0, 0, 0.30), 0 16px 32px rgba(0, 0, 0, 0.20);
 
     /* === Glow Effects === */
     --fluent-glow-brand: 0 0 20px rgba(0, 120, 212, 0.5);
@@ -88,10 +83,8 @@
     --fluent-font-size-200: 12px;
     --fluent-font-size-300: 14px;
     --fluent-font-size-400: 16px;
-    --fluent-font-size-500: 18px;
     --fluent-font-size-600: 20px;
     --fluent-font-size-700: 24px;
-    --fluent-font-size-800: 28px;
     --fluent-font-size-900: 32px;
 
     --fluent-font-weight-regular: 400;
@@ -99,24 +92,10 @@
     --fluent-font-weight-semibold: 600;
     --fluent-font-weight-bold: 700;
 
-    --fluent-line-height-100: 14px;
-    --fluent-line-height-200: 16px;
-    --fluent-line-height-300: 20px;
-    --fluent-line-height-400: 22px;
-    --fluent-line-height-500: 24px;
-    --fluent-line-height-600: 28px;
-
     /* === Animation Tokens === */
-    --fluent-duration-ultra-fast: 50ms;
-    --fluent-duration-faster: 100ms;
     --fluent-duration-fast: 150ms;
     --fluent-duration-normal: 200ms;
-    --fluent-duration-slow: 300ms;
-    --fluent-duration-slower: 400ms;
-
     --fluent-easing-ease-in-out: cubic-bezier(0.33, 0, 0.67, 1);
-    --fluent-easing-decelerate: cubic-bezier(0, 0, 0, 1);
-    --fluent-easing-accelerate: cubic-bezier(1, 0, 1, 1);
 }
 
 /* Dark theme token overrides */
@@ -150,7 +129,6 @@
     --fluent-shadow-2: 0 1px 4px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.3);
     --fluent-shadow-4: 0 2px 8px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
     --fluent-shadow-8: 0 4px 16px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.35);
-    --fluent-shadow-16: 0 8px 32px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4);
 
     --fluent-glow-brand: 0 0 24px rgba(71, 158, 245, 0.35);
     --fluent-glow-success: 0 0 20px rgba(108, 203, 95, 0.35);
